@@ -1,6 +1,6 @@
 """
 
-idea is to create a lateness/dwelltime/traveltime map of the data
+Idea is to create a lateness/dwelltime/traveltime map of the data
 
 Get the munged_data for every route, map it into a dictionary.
 
