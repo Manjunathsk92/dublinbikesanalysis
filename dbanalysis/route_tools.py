@@ -109,7 +109,7 @@ def get_munged_route_data(routename):
             if row[6] in stops_mapped[prev_stop] and row[3] == prev_tuple[3] and row[4] == prev_tuple[4]:
                 count+=1
                 p=prev_tuple
-                tp = tuple([p[3],p[6],row[6],p[7],p[8],p[9],p[10],row[7],row[9]])
+                tp = tuple([p[3],p[4],p[6],row[6],p[7],p[8],p[9],p[10],row[7],row[9]])
                 data_out.append(tp)
             prev_tuple = row
             prev_day = row[3]
@@ -118,7 +118,7 @@ def get_munged_route_data(routename):
             else:
                 tracking = False
 
-    munged_stops = pd.DataFrame(data_out,columns = ['dayofservice','fromstop','tostop','plannedtime_arr_from',\
+    munged_stops = pd.DataFrame(data_out,columns = ['dayofservice','tripid','fromstop','tostop','plannedtime_arr_from',\
                                                  'plannedtime_dep_from',\
                                                 'actualtime_arr_from','actualtime_dep_from',\
                                                 'plannedtime_arr_to','actualtime_arr_to'])
@@ -127,3 +127,60 @@ def get_munged_route_data(routename):
     print('Dropped',num_dropped_rows,'rows')
     print('Dropped', (num_dropped_rows/df.shape[0])*100,'% of dataframe')
     return munged_stops
+
+
+
+
+def get_munged_route_data_and_orphans(routename):
+    """
+    Same as above, but also returns a dataframe of 'oprhans' --> the stops that don't connect to the next stop on any given route.
+    """
+    
+    rn = routename.split('_')[0]
+    stops_mapped = map_stops_single_route(rn)
+    import dbanalysis.headers as hds
+    headers = hds.get_route_headers()
+    df = pd.read_csv('/home/student/ResearchPracticum/data/routesplits/'+routename,names=headers)
+    df = df.sort_values(axis=0,by=['tripid','dayofservice','actualtime_arr'])
+    print(df.shape[0])
+    tracking = False
+    count=0
+    data_out = []
+    orphans = []
+    for row in df.itertuples():
+        if not tracking and row[6] in stops_mapped:
+            tracking = True
+            prev_tuple = row
+            prev_stop = row[6]
+            prev_day = row[3]
+        elif tracking:
+            if row[3] == prev_tuple[3] and row[4] == prev_tuple[4]:
+                count+=1
+                p=prev_tuple
+                tp = tuple([p[3],p[4],p[6],row[6],p[7],p[8],p[9],p[10],row[7],row[9]])
+                
+                if row[6] in stops_mapped[prev_stop]:
+                    data_out.append(tp)
+                else:
+                    orphans.append(tp)
+
+            prev_tuple = row
+            prev_day = row[3]
+            if row[6] in stops_mapped:
+                prev_stop = row[6]
+            else:
+                tracking = False
+
+    munged_stops = pd.DataFrame(data_out,columns = ['dayofservice','tripid','fromstop','tostop','plannedtime_arr_from',\
+                                                 'plannedtime_dep_from',\
+                                                'actualtime_arr_from','actualtime_dep_from',\
+                                                'plannedtime_arr_to','actualtime_arr_to'])
+    munged_orphans = pd.DataFrame(orphans,columns=['dayofservice','tripid','fromstop','tostop','plannedtime_arr_from',\
+                                                 'plannedtime_dep_from',\
+                                                'actualtime_arr_from','actualtime_dep_from',\
+                                                'plannedtime_arr_to','actualtime_arr_to'])
+    num_dropped_rows = df.shape[0] - munged_stops.shape[0]
+    print('Dropped',num_dropped_rows,'rows')
+    print('Dropped', (num_dropped_rows/df.shape[0])*100,'% of dataframe')
+    return munged_stops, munged_orphans
+
