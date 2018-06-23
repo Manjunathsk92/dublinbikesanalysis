@@ -1,29 +1,39 @@
-"""Splits the large leavetime files up using pandas.
-
-Splits them into ~500 files, where each file is all of the samples that correspond to a given route id
 """
-directory = '/home/student/data'
+One file to process all data into individual stop/stop links
+
+"""
+directory = input('Input the location of the csv files:')
 import pandas as pd
 from subprocess import call
 #get the rt_trips file. This is used as a key to the leave times file
-trips = pd.read_csv(directory+'/rt_trips_2017_I_DB.txt', delimiter=';')
+trips = pd.read_csv(directory+'rt_trips_2017_I_DB.txt', delimiter=';')
 #trip id and dayofservice are a primary key to the leavetimes file, so we will
 #use these to merge with the routeids in the trips files
 keys=trips[['routeid','tripid','dayofservice']]
 routes = [route_id for route_id in keys['routeid'].unique()]
 #create a new directory, and an empty file for every route
+print('Creating temporary route directories')
 call(['mkdir',directory+'/routesplits'])
 for route_id in routes:
     call(['touch',directory+'/routesplits/'+route_id])
 chunksize = 1000000
 #we will read the leavetimes file 1 million rows at a time
-leavetimes = pd.read_csv(directory+'/rt_leavetimes_2017_I_DB.txt',delimiter=';',chunksize=1000000)
+leavetimes = pd.read_csv(directory+'rt_leavetimes_2017_I_DB.txt',delimiter=';',chunksize=1000000)
 #get the headers by reading the first row  of the file
 heads=leavetimes.get_chunk(1)
 cols=[col for col in heads.columns]
 count=0
+#get size of data
+total = 0
 while True:
-
+    try:
+        c = leavetimes.get_chunk(1000000)
+        total += 1000000
+    except:
+        break
+leavetimes = pd.read_csv(directory+'rt_leavetimes_2017_I_DB.txt',delimiter=';',chunksize=1000000)
+while True:
+    print('Processing lines', count-1000000, 'to', count, '\n',(count/total)*100,'% processed', end="\n", flush = False)
     count+=1000000
     #read 1000000 rows of the file into a dataframe
     try:
@@ -41,4 +51,10 @@ while True:
         to_file = temp_df[temp_df['routeid']==route_id]
         with open(directory+'/routesplits/'+route_id, 'a') as f:
             to_file[cols].to_csv(f,header=False)
-    print('Processed',count,'lines',end="",flush=True)
+
+from dbanalysis import split_routes_stops
+print('Processing temporary route files')    
+split_routes_stops.split_all_routes()
+print('Removing temporary files')
+call(['rm','rf','/home/student/data/routesplits'])
+print('Finished') 

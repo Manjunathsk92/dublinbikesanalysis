@@ -51,7 +51,7 @@ def map_stops_single_route(rn):
     """
     Maps stops in a route to the stops with which they share a connection
     """
-    route_dict = json.loads(open('/home/student/ResearchPracticum/data/gtfs/trimmed_routes.json','r').read())[rn]
+    route_dict = json.loads(open('/home/student/dbanalysis/trimmed_routes.json','r').read())[rn]
     route_dict = [route[1:] for route in route_dict]
     stops_mapped = {}
     for route in route_dict:
@@ -61,13 +61,23 @@ def map_stops_single_route(rn):
             else:                                                                               stops_mapped[route[i]]=[route[i+1]]
     return stops_mapped
 
+def get_all_route_data(routename):
+    stops_mapped = map_stops_single_route(routename)
+    from dbanalysis import stop_tools as st
+    to_concat = []
+    for stopa in stops_mapped:
+        for stopb in stops_mapped[stopa]:
+            to_concat.append(st.get_stop_link(stopa,stopb))
+
+    return pd.concat(to_concat,axis=0)
+
 def map_all_stops():
     """
     Map all stops to the stops with which they share a connection
     Utilizes the function above.
     """
     stops_mapped = {}
-    route_dict = json.loads(open('/home/student/ResearchPracticum/data/gtfs/trimmed_routes.json','r').read())
+    route_dict = json.loads(open('/home/student/dbanalysis/trimmed_routes.json','r').read())
     for route in route_dict:
         temp_stops=(map_stops_single_route(route))
         for stop in temp_stops:
@@ -179,8 +189,9 @@ def get_munged_route_data_and_orphans(routename):
                                                  'plannedtime_dep_from',\
                                                 'actualtime_arr_from','actualtime_dep_from',\
                                                 'plannedtime_arr_to','actualtime_arr_to'])
-    num_dropped_rows = df.shape[0] - munged_stops.shape[0]
-    print('Dropped',num_dropped_rows,'rows')
+    num_dropped_rows = df.shape[0] - (munged_stops.shape[0] + munged_orphans.shape[0])
+    print('Processed route', routename)
     print('Dropped', (num_dropped_rows/df.shape[0])*100,'% of dataframe')
     return munged_stops, munged_orphans
+
 
