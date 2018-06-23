@@ -1,37 +1,30 @@
 """
-script to make all models
 
-Currently the running time on this is total shit
+Network of bus stops, with models on the go.
 
 """
-
-src='/home/student/dbanalysis/reduced-traffic-map.js'
+from dbanalysis import route_tools as rt
+from dbanalysis.classes import stop as bus_stop
 import json
-f=open(src,'r').read()
-stopdict = json.loads(f)
-import time
-#make all models
-import pandas as pd
-from sqlalchemy import create_engine
-connstring = 'mysql://'+'dublinbus'+':'+'Ucd4dogs!'+'@'+'127.0.0.1:3306'+'/researchpracticum'
-engine = create_engine(connstring)
-from dbanalysis.classes import stop_link_model as slm
-network_models = {}
-for stopa in stopdict:
-    network_models[stopa] = {}
-    for stopb in stopdict[stopa]['tostops']:
-        t1=time.time()
-        query = "SELECT * FROM dublinBus_stop_model WHERE stopA="
-        query += stopa
-        query += " AND stopB=" + stopb+";"
-       	df = pd.read_sql(con=engine,sql=query)
-        print("received",df.shape[0],"rows")
-        print("Took", time.time()-t1,"seconds..")
-        i=input()
+import os
+class bus_network():
 
-import pickle
-with f.open('modelzzz.pickle','wb') as handle:
 
-    pickle.dump(handle, protocol = "HIGHEST_PROTOCOL")
-    print('Network created')
+    def __init__(self,train=False):
+        stops_dict = json.loads(open('/home/student/dbanalysis/stops_trimmed.json','r').read())
+        stops_map = rt.map_all_stops()
+        self.nodes = [bus_stop.stop(stop, name=stops_dict[str(stop)]['stop_name'],\
+                     coords=[stops_dict[str(stop)]['lat'],stops_dict[str(stop)]['lon']]\
+                     , from_pickle = not train)\
+                      for stop in stops_map if os.path.isdir('/home/student/data/stops/'+str(stop))\
+                     and len(os.listdir('/home/student/data/stops/'+str(stop))) > 1]
+        print('Only found data for', len(self.nodes) / len(stops_map), 'stops')
 
+
+
+
+if __name__ == '__main__':
+    import time
+    t1=time.time()
+    b=bus_network(train=True)
+    print('Done.\n Trained linear bus network model in', time.time()-t1, 'seconds')        
