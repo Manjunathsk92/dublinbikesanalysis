@@ -4,6 +4,12 @@ The class representing a stop
 
 Needs changing to reflect different route ids (for dwell time) etc
 
+Can also be used to build analysis of the network, by setting train_model to False and just 
+using these classes as holders for their data
+
+Will define a set of functions to generate info on that data or something. Probably. Later
+
+Need to add support for routes
 """
 
 from dbanalysis import stop_tools as st
@@ -11,9 +17,12 @@ import os
 import pandas as pd
 class stop():
 
-    def __init__(self,stop_id, coords=None, name=None, from_pickle=True):
+    def __init__(self,stop_id, coords=None, name=None, from_pickle=True, analyze=False, train_model=True):
         if from_pickle:
             pass
+        self.data = None
+        self.cached_stats = []
+        # is there much point in doing this I reckon --> caching statistical data that will be rarely used?
         else:
             self.stop_id = stop_id
             self.stop_links = [i.split('.')[0] for i in \
@@ -29,8 +38,11 @@ class stop():
                 self.name = stops_dict[str(stop_id)]['stop_name']
                 self.lat = stops_dict[str(stop_id)]['lat']
                 self.long = stops_dict[str(stop_id)]['lon']            
-                del(stops_dict) 
-            self.train_models()
+                del(stops_dict)
+            if train_model: 
+                self.train_models()
+            if analyze:
+                self.data = get_all_data(self)
     def get_link_data(self,link):
 
         return st.get_stop_link(self.stop_id,link) 
@@ -92,7 +104,45 @@ class stop():
                 return haversine.haversine((self.lat,self.long),(lat,lon))
 
         else:
-            print('error. Non data specified')
+            print('error. No data specified')
             return None
         
-            
+    def get_links(self):        
+        return self.stop_links
+    
+    def get_basic_info(self,df):
+        out={}
+        out['avg_travel_time']=df['traveltime'].mean()
+        out['avg_dwell_time_all_routes']=df['dwelltime'].mean()
+        out['link_distance'] = self.get_distance(stop=link)
+        out['avg_speed'] = out['link_distance'] / out['avg_travel_time']
+        out['avg_lateness'] = (df['actualtime_arr_to'] - df['actualtime_dep_from']).mean()
+        return out
+    def get_basic_info_link(self,link):
+        return self.get_basic_info(self.data[self.data['tostop']==link])
+
+    def get_basic_link_info_by_day(self,link,day):
+        return self.get_basic_info(self.data[self.data['tostop']==link & self.data['dayofweek'] == day]
+    def get_basic_link_info_by_hour(self,link,hour):
+        
+        return self.get_basic_info(self.data[self.data['tostop']==link & self.data['hour'] == hour]
+    
+    def get_basic_link_info_by_day_hour(self,link,day,hour):
+        return self.get_basic_info(self.data[self.data['tostop']==link & self.data['dayofweek'] == day & self.data['hour']==hour]
+
+    def get_basic_info_all_links(self):
+        
+        out = []
+        for link in self.stop_links:
+            out[link] = self.get_basic_link_info(link)
+        return out
+
+    def get_avg_dwell_time(self):
+        return self.data['dwelltime'].mean()
+    
+    def clear_data(self):
+        del(self.data)
+
+    def clear_cache(self):
+        del(self.cached_data)
+        self.cached_data = {}
