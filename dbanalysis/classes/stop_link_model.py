@@ -20,6 +20,7 @@ Should be able to model the time taken to get between two stops
         self.data = data
         self.buildDwellTimeModel()
         self.buildTravelModel()
+        del(self.data)
     def buildDwellTimeModel(self):
         target = 'dwelltime'
         features = ['actualtime_arr_from','dayofweek','month','weekend']

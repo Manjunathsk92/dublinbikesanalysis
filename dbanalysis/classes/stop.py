@@ -25,11 +25,11 @@ class stop():
                 self.long = coords[1]
             else:
                 import json
-                stops_dict = json.loads(f.open('home/student/dbanalysis/stops_trimmed.json','r').read())
-                self.name = stop_dict[str(stop_id)]['stop_name']
-                self.lat = stop_dict[str(stop_id)]['lat']
-                self.long = stop_dict[str(stop_id)]['lon']            
-            
+                stops_dict = json.loads(open('/home/student/dbanalysis/stops_trimmed.json','r').read())
+                self.name = stops_dict[str(stop_id)]['stop_name']
+                self.lat = stops_dict[str(stop_id)]['lat']
+                self.long = stops_dict[str(stop_id)]['lon']            
+                del(stops_dict) 
             self.train_models()
     def get_link_data(self,link):
 
@@ -82,7 +82,7 @@ class stop():
         if coords != None:
             return haversine.haversine((self.lat,self.long),(coords[0],coords[1]))
         elif stop != None:
-            stops_dict = json.loads(f.open('home/student/dbanalysis/stops_trimmed.json','r').read())
+            stops_dict = json.loads(open('/home/student/dbanalysis/stops_trimmed.json','r').read())
             if stop not in stop_dict:
                 print('error - invalid stop')
                 return None
