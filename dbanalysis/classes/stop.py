@@ -18,11 +18,12 @@ import pandas as pd
 class stop():
 
     def __init__(self,stop_id, coords=None, name=None, from_pickle=True, analyze=False, train_model=True):
-        if from_pickle:
-            pass
         self.data = None
         self.cached_stats = []
-        # is there much point in doing this I reckon --> caching statistical data that will be rarely used?
+
+
+        if from_pickle:
+            pass
         else:
             self.stop_id = stop_id
             self.stop_links = [i.split('.')[0] for i in \
@@ -81,7 +82,7 @@ class stop():
             self.linkmodels[link] = slm.stop_link_model(self.stop_id, link, in_data,clf='Linear')
         del data
         del in_data
-    def  predict(link,arrival_time,dayofweek,month,weekend):
+    def  predict(self,link,arrival_time,dayofweek,month,weekend):
         
         return self.linkmodels[link].get_time_to_next_stop(arrival_time,dayofweek,month,weekend)
                 
@@ -122,13 +123,13 @@ class stop():
         return self.get_basic_info(self.data[self.data['tostop']==link])
 
     def get_basic_link_info_by_day(self,link,day):
-        return self.get_basic_info(self.data[self.data['tostop']==link & self.data['dayofweek'] == day]
+        return self.get_basic_info(self.data[self.data['tostop']==link & self.data['dayofweek'] == day])
     def get_basic_link_info_by_hour(self,link,hour):
         
-        return self.get_basic_info(self.data[self.data['tostop']==link & self.data['hour'] == hour]
+        return self.get_basic_info(self.data[self.data['tostop']==link & self.data['hour'] == hour])
     
     def get_basic_link_info_by_day_hour(self,link,day,hour):
-        return self.get_basic_info(self.data[self.data['tostop']==link & self.data['dayofweek'] == day & self.data['hour']==hour]
+        return self.get_basic_info(self.data[self.data['tostop']==link & self.data['dayofweek'] == day & self.data['hour']==hour])
 
     def get_basic_info_all_links(self):
         
