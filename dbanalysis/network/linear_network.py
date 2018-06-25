@@ -16,6 +16,7 @@ class bus_network():
         stops_map = rt.map_all_stops()
         self.nodes={}
         self.routes = json.loads(open('/home/student/dbanalysis/dbanalysis/resources/trimmed_routes.json','r').read())
+        self.route_keys = [i.split('_')[0] for i in os.listdir('/home/student/data/routesplits')]
         if load_from_pickle:
             import pickle
             with open('/home/student/dbanalysis/dbanalysis/resources/models/simple_linear_network1529837123.740164.pickle', 'rb') as handle:
@@ -56,12 +57,13 @@ class bus_network():
             stop_b_id = route[i+1]
             model = self.nodes[str(stop_a_id)]
             total_time+=model.predict(str(stop_b_id),total_time,day,month,weekend)
+            
             out_hour = int(total_time / 3600)
             out_minute = int((total_time % 3600)/60)
             out_day=datetime.datetime(year,month,monthday,out_hour,out_minute)
-            print(self.stops_dict[str(stop_b_id)]['stop_name'],':',out_day)
+            #print(self.stops_dict[str(stop_b_id)]['stop_name'],':',out_day)
 
-        pass
+        
     def prep_datetime(self,dt):
         import datetime
         if not type(dt) is datetime.datetime:
@@ -77,8 +79,41 @@ class bus_network():
         import datetime
         dt = datetime.datetime.now()
         self.run_bus_journey(route,dt)
+    def test_random_bus(self):
+        import random
+        try:
+            r = random.choice(self.route_keys)
+            route = self.routes[r][0][1:]
+        except:
+            print(self.routes[r])
+            input()
+            return None
+        dt = datetime.datetime.now()
+        self.run_bus_journey(route,dt)
+    def test_all_routes(self):
+        total=0
+        failures=0
+        total_routes=0
+        total_failures=0
+        for route in self.routes:
+            total_routes+=1
+            succeed=False
+            for variation in self.routes[route]:
+                total+=1
+                try:
+                    self.run_bus_journey(variation[1:],datetime.datetime.now())
+                    succeed = True
+                except:
+                    print('Failed for', route,variation)
+                    failures+=1
+            if not succeed:
+                total_failures+=1
+                
+
+        print('failed for', (failures/total)*100, 'route variations')
+        print('failed totally for', (total_failures/total_routes)*100,'% of routes')
 if __name__ == '__main__':
     import time
-    t1=time.time()
+   
     b=bus_network(load_from_pickle=True)
-    b.test_bus()
+    b.test_all_routes()
