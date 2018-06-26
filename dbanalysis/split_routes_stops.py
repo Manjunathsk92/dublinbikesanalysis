@@ -13,7 +13,6 @@ import os
 def split_route_file(route,dump_directory):
     print('Retrieving data for route:',route)
     data,orphans = rt.get_munged_route_data_and_orphans(route)
-    data['routeid'] = route
     cols = [col for col in data.columns if col not in ['fromstop','tostop']]
     for stopA in data['fromstop'].unique():
         if not os.path.isdir(dump_directory+'/'+str(stopA)):

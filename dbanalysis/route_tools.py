@@ -1,5 +1,7 @@
 import pandas as pd
 import json
+import os 
+import pickle
 
 def get_trips_days(df):
     """
@@ -71,11 +73,15 @@ def get_all_route_data(routename):
 
     return pd.concat(to_concat,axis=0)
 
-def map_all_stops():
+def map_all_stops(load_from_pickle=True):
     """
     Map all stops to the stops with which they share a connection
     Utilizes the function above.
     """
+    if os.path.exists('/home/student/data/stopsmap.pickle') and load_from_pickle:
+        with open('/home/student/data/stopsmap.pickle','rb') as handle:
+            return pickle.load(handle)
+
     stops_mapped = {}
     route_dict = json.loads(open('/home/student/dbanalysis/trimmed_routes.json','r').read())
     for route in route_dict:
@@ -86,6 +92,8 @@ def map_all_stops():
             else:
                 for i in temp_stops[stop]:
                     stops_mapped[stop].add(i)
+    with open('/home/student/data/stopsmap.pickle','wb') as handle:
+        pickle.dump(stops_mapped,handle,protocol=pickle.HIGHEST_PROTOCOL)
     return stops_mapped
 
         
@@ -147,7 +155,7 @@ def get_munged_route_data_and_orphans(routename):
     """
     
     rn = routename.split('_')[0]
-    stops_mapped = map_stops_single_route(rn)
+    stops_mapped = map_all_stops()
     import dbanalysis.headers as hds
     headers = hds.get_route_headers()
     df = pd.read_csv('/home/student/ResearchPracticum/data/routesplits/'+routename,names=headers)
@@ -157,6 +165,7 @@ def get_munged_route_data_and_orphans(routename):
     count=0
     data_out = []
     orphans = []
+    df['routeid'] = routename
     for row in df.itertuples():
         if not tracking and row[6] in stops_mapped:
             tracking = True
