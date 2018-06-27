@@ -60,7 +60,8 @@ def map_stops_single_route(rn):
         for i in range(0, len(route)-1):
             if route[i] in stops_mapped:
                 stops_mapped[route[i]].append(route[i+1])
-            else:                                                                               stops_mapped[route[i]]=[route[i+1]]
+            else:                                                                               
+                stops_mapped[route[i]]=[route[i+1]]
     return stops_mapped
 
 def get_all_route_data(routename):
@@ -85,13 +86,26 @@ def map_all_stops(load_from_pickle=True):
     stops_mapped = {}
     route_dict = json.loads(open('/home/student/dbanalysis/trimmed_routes.json','r').read())
     for route in route_dict:
-        temp_stops=(map_stops_single_route(route))
+        temp_stops=map_stops_single_route(route)
         for stop in temp_stops:
             if stop not in stops_mapped:
                 stops_mapped[stop] = set([i for i in temp_stops[stop]])
             else:
                 for i in temp_stops[stop]:
                     stops_mapped[stop].add(i)
+    df = pd.read_csv('/home/student/data/officialroutes.csv')
+    official_routes = {}
+    for j in df['JOURNEY_PATTERN_ID'].unique():
+        gf=df[df['JOURNEY_PATTERN_ID']==j].sort_values(by=['SEQUENCE_NUMBER'])
+        official_routes[j]=[int(i) for i in gf['ID'].unique()]
+    for j in official_routes:
+        rt=official_routes[j]
+        for i in range(0, len(rt)-1):
+            if rt[i] not in stops_mapped:
+                stops_mapped[rt[i]] = set([rt[i+1]])
+            else:
+                stops_mapped[rt[i]].add(rt[i+1])
+
     with open('/home/student/data/stopsmap.pickle','wb') as handle:
         pickle.dump(stops_mapped,handle,protocol=pickle.HIGHEST_PROTOCOL)
     return stops_mapped
@@ -153,25 +167,28 @@ def get_munged_route_data_and_orphans(routename):
     """
     Same as above, but also returns a dataframe of 'oprhans' --> the stops that don't connect to the next stop on any given route.
     """
-    
+    missing_stops = set([2176, 2567, 7560, 7053, 7567, 2066, 2067, 5013, 5014, 5015, 662, 663, 4508, 7325, 7326, 2207, 2208, 7457, 286, 2212, 2087, 6185, 6186, 7475, 7220, 7607, 4537, 7483, 7544, 7290, 6216, 7497, 7164, 1364, 2780, 2781, 2782, 2783, 1375, 1376, 4319, 1379, 7269, 486, 2791, 4455, 2793, 2794, 7402, 7661, 2798, 2799, 1645, 4717, 7666, 7667, 7668, 4724, 2806, 2807, 2808, 7417, 7418, 7291, 380, 7165])
     rn = routename.split('_')[0]
     stops_mapped = map_all_stops()
     import dbanalysis.headers as hds
     headers = hds.get_route_headers()
     df = pd.read_csv('/home/student/ResearchPracticum/data/routesplits/'+routename,names=headers)
     df = df.sort_values(axis=0,by=['tripid','dayofservice','actualtime_arr'])
-    print(df.shape[0])
+    
     tracking = False
     count=0
     data_out = []
     orphans = []
     df['routeid'] = routename
+    row_number = 0
     for row in df.itertuples():
+            
         if not tracking and row[6] in stops_mapped:
             tracking = True
-            prev_tuple = row
+            prev_tuple = row[:]
             prev_stop = row[6]
             prev_day = row[3]
+           
         elif tracking:
             if row[3] == prev_tuple[3] and row[4] == prev_tuple[4]:
                 count+=1
@@ -188,7 +205,8 @@ def get_munged_route_data_and_orphans(routename):
             if row[6] in stops_mapped:
                 prev_stop = row[6]
             else:
-                tracking = False
+                tracking=False
+            
 
     munged_stops = pd.DataFrame(data_out,columns = ['dayofservice','tripid','fromstop','tostop','plannedtime_arr_from',\
                                                  'plannedtime_dep_from',\

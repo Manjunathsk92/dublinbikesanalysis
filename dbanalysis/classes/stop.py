@@ -10,6 +10,8 @@ using these classes as holders for their data
 Will define a set of functions to generate info on that data or something. Probably. Later
 
 Need to add support for routes
+
+
 """
 
 from dbanalysis import stop_tools as st
@@ -111,7 +113,7 @@ class stop():
     def get_links(self):        
         return self.stop_links
     
-    def get_basic_info(self,df):
+    def get_basic_info(self,df,link):
         out={}
         out['avg_travel_time']=df['traveltime'].mean()
         out['avg_dwell_time_all_routes']=df['dwelltime'].mean()
@@ -120,22 +122,22 @@ class stop():
         out['avg_lateness'] = (df['actualtime_arr_to'] - df['actualtime_dep_from']).mean()
         return out
     def get_basic_info_link(self,link):
-        return self.get_basic_info(self.data[self.data['tostop']==link])
+        return self.get_basic_info(self.data[self.data['tostop']==link],link)
 
     def get_basic_link_info_by_day(self,link,day):
-        return self.get_basic_info(self.data[self.data['tostop']==link & self.data['dayofweek'] == day])
+        return self.get_basic_info(self.data[self.data['tostop']==link & self.data['dayofweek'] == day],link)
     def get_basic_link_info_by_hour(self,link,hour):
         
-        return self.get_basic_info(self.data[self.data['tostop']==link & self.data['hour'] == hour])
+        return self.get_basic_info(self.data[self.data['tostop']==link & self.data['hour'] == hour],link)
     
     def get_basic_link_info_by_day_hour(self,link,day,hour):
-        return self.get_basic_info(self.data[self.data['tostop']==link & self.data['dayofweek'] == day & self.data['hour']==hour])
+        return self.get_basic_info(self.data[self.data['tostop']==link & self.data['dayofweek'] == day & self.data['hour']==hour],link)
 
     def get_basic_info_all_links(self):
         
         out = []
         for link in self.stop_links:
-            out[link] = self.get_basic_link_info(link)
+            out[link] = self.get_basic_info_link(link)
         return out
 
     def get_avg_dwell_time(self):
@@ -147,3 +149,8 @@ class stop():
     def clear_cache(self):
         del(self.cached_data)
         self.cached_data = {}
+
+    def create_info_cache(self):
+        self.info_cache = {}
+        pass
+

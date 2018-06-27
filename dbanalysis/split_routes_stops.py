@@ -38,10 +38,10 @@ def split_route_file(route,dump_directory):
 
 def split_all_routes():
     dump_directory = '/home/student/data/stops'
-    call(['mkdir',dump_directory])
+    #call(['mkdir',dump_directory])
     length = len(os.listdir('/home/student/data/routesplits'))
     count=0
-    for route in os.listdir('/home/student/data/routesplits'):
+    for route in os.listdir('/home/student/data/routesplits')[273:]:
         count+=1
         split_route_file(route,dump_directory)
         print('Splitting '+ route + ':', end='',flush=True)

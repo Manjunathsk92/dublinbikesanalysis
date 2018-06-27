@@ -61,7 +61,7 @@ class bus_network():
             out_hour = int(total_time / 3600)
             out_minute = int((total_time % 3600)/60)
             out_day=datetime.datetime(year,month,monthday,out_hour,out_minute)
-            #print(self.stops_dict[str(stop_b_id)]['stop_name'],':',out_day)
+            print(self.stops_dict[str(stop_b_id)]['stop_name'],':',out_day)
 
         
     def prep_datetime(self,dt):
@@ -70,9 +70,9 @@ class bus_network():
             import datetime
             dt=datetime.datetime(dt)
         return dt.year, dt.weekday(), dt.month, dt.day, dt.day > 4, (dt.hour*3600) + (dt.minute)*60 + dt.second
-    def set_bus(self, route,dt, variation=0):
-        route=self.routes[str(route)][variation][1:]
-        print('Travelling from', self.stops_dict[route[0]]['stop_name'], 'to', self.routes[str(route)][variation][0])
+    def set_bus(self, rt,dt, variation=0):
+        route=self.routes[str(rt)][variation][1:]
+        print('Travelling from', self.stops_dict[str(rt)]['stop_name'], 'to', self.routes[str(rt)][variation][0])
         self.run_bus_journey(route,dt)
     def test_bus(self):
         route=self.routes['15'][1][1:]
@@ -116,4 +116,3 @@ if __name__ == '__main__':
     import time
    
     b=bus_network(load_from_pickle=True)
-    b.test_all_routes()
