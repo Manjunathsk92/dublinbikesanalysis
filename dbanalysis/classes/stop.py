@@ -22,7 +22,7 @@ class stop():
     def __init__(self,stop_id, coords=None, name=None, from_pickle=True, analyze=False, train_model=True):
         self.data = None
         self.cached_stats = []
-
+        self.timetable = {}
 
         if from_pickle:
             pass
@@ -49,7 +49,13 @@ class stop():
     def get_link_data(self,link):
 
         return st.get_stop_link(self.stop_id,link) 
-
+    def get_timetable(self):
+        return self.timetable
+    def add_to_timetable(self,date,time,route,next_stop):
+        if date not in self.timetable:
+            self.timetable[date]={}
+            
+        self.timetable[date][time] = {'route':route,'next_stop':next_stop}
     def get_all_data(self):
         """
         Retrieve all data about this stop
@@ -60,9 +66,10 @@ class stop():
             to_concat.append(self.get_link_data(link))
         return self.prep_data(pd.concat(to_concat, axis=0))
     
-    def prep_data(self,df,merge_weather=False):
+    def prep_data(self,df,merge_weather=False,weather=None):
         """
-        Prepare that data for modelling
+        Prepare that data for modelling.
+        Add functions here for weather, I think.
         """
         df['traveltime']=df['actualtime_arr_to'] - df['actualtime_dep_from']
         df['dwelltime']=df['actualtime_dep_from']-df['actualtime_arr_from']

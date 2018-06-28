@@ -6,6 +6,11 @@ Basically gets lists of stops and departure times for the network model.
 There is room for some heady optimization here, data structure wise.
 e.g linked lists and all of that.
 Some preprocessing could be done on the times as well....
+
+For now, the thing would be to test what routes we can't currently model for, and create a dropped version of this.. or something?
+
+Also, we need to figure out how we're actually going to use data times and whatnot....
+
 """
 class time_tabler():
 

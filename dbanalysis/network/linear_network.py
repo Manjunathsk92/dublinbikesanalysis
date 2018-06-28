@@ -8,6 +8,7 @@ from dbanalysis.classes import stop as bus_stop
 import json
 import os
 import datetime
+from dbanalysis.classes import time_tabler
 class bus_network():
 
 
@@ -17,6 +18,7 @@ class bus_network():
         self.nodes={}
         self.routes = json.loads(open('/home/student/dbanalysis/dbanalysis/resources/trimmed_routes.json','r').read())
         self.route_keys = [i.split('_')[0] for i in os.listdir('/home/student/data/routesplits')]
+        self.time_tabler = time_tabler.time_tabler()
         if load_from_pickle:
             import pickle
             with open('/home/student/dbanalysis/dbanalysis/resources/models/simple_linear_network1529837123.740164.pickle', 'rb') as handle:
@@ -78,31 +80,7 @@ class bus_network():
             import datetime
             dt=datetime.datetime(dt)
         return dt.year, dt.weekday(), dt.month, dt.day, dt.day > 4, (dt.hour*3600) + (dt.minute)*60 + dt.second
-    def set_bus(self, rt,dt, variation=0):
-        
-        """
-        Given a route and a date time, set a bus to run through the network
-
-        """
-        route=self.routes[str(rt)][variation][1:]
-        print('Travelling from', self.stops_dict[str(rt)]['stop_name'], 'to', self.routes[str(rt)][variation][0])
-        self.run_bus_journey(route,dt)
-    def test_bus(self):
-        route=self.routes['15'][1][1:]
-        import datetime
-        dt = datetime.datetime.now()
-        self.run_bus_journey(route,dt)
-    def test_random_bus(self):
-        import random
-        try:
-            r = random.choice(self.route_keys)
-            route = self.routes[r][0][1:]
-        except:
-            print(self.routes[r])
-            input()
-            return None
-        dt = datetime.datetime.now()
-        self.run_bus_journey(route,dt)
+    
     def test_all_routes(self):
         total=0
         failures=0
