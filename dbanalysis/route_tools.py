@@ -179,7 +179,6 @@ def get_munged_route_data_and_orphans(routename):
     count=0
     data_out = []
     orphans = []
-    df['routeid'] = routename
     row_number = 0
     for row in df.itertuples():
             

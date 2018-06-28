@@ -3,4 +3,4 @@ def get_route_headers():
 
 
 def get_stop_link_headers():
-    return ['dayofservice', 'tripid','plannedtime_arr_from','plannedtime_dep_from', 'actualtime_arr_from', 'actualtime_dep_from','plannedtime_arr_to', 'actualtime_arr_to', 'routeid']
+    return ['index','dayofservice', 'tripid','plannedtime_arr_from','plannedtime_dep_from', 'actualtime_arr_from', 'actualtime_dep_from','plannedtime_arr_to', 'actualtime_arr_to', 'routeid']

@@ -51,13 +51,19 @@ class stop():
         return st.get_stop_link(self.stop_id,link) 
 
     def get_all_data(self):
+        """
+        Retrieve all data about this stop
+        """
         to_concat = []
         import pandas as pd
         for link in self.stop_links:
             to_concat.append(self.get_link_data(link))
         return self.prep_data(pd.concat(to_concat, axis=0))
     
-    def prep_data(self,df):
+    def prep_data(self,df,merge_weather=False):
+        """
+        Prepare that data for modelling
+        """
         df['traveltime']=df['actualtime_arr_to'] - df['actualtime_dep_from']
         df['dwelltime']=df['actualtime_dep_from']-df['actualtime_arr_from']
         time_format = "%d-%b-%y %H:%M:%S"
@@ -65,17 +71,33 @@ class stop():
         df['dayofweek'] = df['dt'].dt.dayofweek
         df['month'] = df['dt'].dt.month
         df['weekend']=df['dayofweek']>4
-        return df 
+        if merge_weather:
+            df['date']=df['dt'].dt.date
+            df['hour']=df['actualtime_arr_from']//3600
+            weather = pd.read_csv('/home/student/data/cleanweather.csv')
+            weather['date']=pd.to_datetime(weather['date'])
+            weather['hour']=weather['date'].dt.hour
+            weather['date']=weather['date'].dt.date
+            return pd.merge(df,weather, on=['date','hour'])
+        else:
+
+            return df 
 
 
 
     def load_models(self,picklefile):
+        """
+        Load a stops models from pickle files
+        """
         import pickle
         from dbanalysis.classes import stop_link_model as slm
         with open(picklefile,'rb') as handle:
             self.linkmodels = pickle.load(handle)
     
     def train_models(self):
+        """
+        Train models for this stop. Currently, it is agnostic as to the route being modelled for
+        """
         from dbanalysis.classes import stop_link_model as slm
         data = self.get_all_data()
         self.linkmodels = {}
@@ -85,6 +107,9 @@ class stop():
         del data
         del in_data
     def  predict(self,link,arrival_time,dayofweek,month,weekend):
+        """
+        Return a full travel time prediction for the journey from this stop to the next link
+        """
         
         return self.linkmodels[link].get_time_to_next_stop(arrival_time,dayofweek,month,weekend)
                 
@@ -114,6 +139,9 @@ class stop():
         return self.stop_links
     
     def get_basic_info(self,df,link):
+        """
+        Gets some basic stats about this stop, as long as its dataframe is supplied
+        """
         out={}
         out['avg_travel_time']=df['traveltime'].mean()
         out['avg_dwell_time_all_routes']=df['dwelltime'].mean()
@@ -148,9 +176,6 @@ class stop():
 
     def clear_cache(self):
         del(self.cached_data)
-        self.cached_data = {}
+        self.cached_data = None
 
-    def create_info_cache(self):
-        self.info_cache = {}
-        pass
-
+    

@@ -13,6 +13,8 @@ import os
 def split_route_file(route,dump_directory):
     print('Retrieving data for route:',route)
     data,orphans = rt.get_munged_route_data_and_orphans(route)
+    data['routeid']=route
+    orphans['routeid']=route
     cols = [col for col in data.columns if col not in ['fromstop','tostop']]
     for stopA in data['fromstop'].unique():
         if not os.path.isdir(dump_directory+'/'+str(stopA)):
@@ -38,10 +40,10 @@ def split_route_file(route,dump_directory):
 
 def split_all_routes():
     dump_directory = '/home/student/data/stops'
-    #call(['mkdir',dump_directory])
+    call(['mkdir',dump_directory])
     length = len(os.listdir('/home/student/data/routesplits'))
     count=0
-    for route in os.listdir('/home/student/data/routesplits')[273:]:
+    for route in os.listdir('/home/student/data/routesplits'):
         count+=1
         split_route_file(route,dump_directory)
         print('Splitting '+ route + ':', end='',flush=True)

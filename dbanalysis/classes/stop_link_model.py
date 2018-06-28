@@ -31,6 +31,9 @@ Should be able to model the time taken to get between two stops
         self.travel_regr=self.clf.fit(self.data[features],self.data[target])
     
     def get_time_to_next_stop(self, arrival_time, dayofweek,month,weekend):
+        """
+        Get predictions for dwell time and travel time and sum them together to get the time to the next stop"
+        """
         index1 = ['actualtime_arr_from','dayofweek','month','weekend']
         index2 = ['actualtime_dep_from','dayofweek','month','weekend']
         row = pd.DataFrame([[arrival_time,dayofweek,month,weekend]],index=index1)

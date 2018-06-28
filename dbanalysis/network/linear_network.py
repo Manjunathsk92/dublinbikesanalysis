@@ -41,6 +41,9 @@ class bus_network():
         pass
         
     def dump_network(self,directory):
+        """
+        Save network to pickle files with timestamp
+        """
         import pickle
         import time
         with open(directory+'/'+'simple_linear_network'+str(time.time())+'.pickle', 'wb') as handle:
@@ -65,12 +68,22 @@ class bus_network():
 
         
     def prep_datetime(self,dt):
+        """
+        If a datetime isn't entered, convert it to a datetime.
+
+        Then break the datetime down into features for the model
+        """
         import datetime
         if not type(dt) is datetime.datetime:
             import datetime
             dt=datetime.datetime(dt)
         return dt.year, dt.weekday(), dt.month, dt.day, dt.day > 4, (dt.hour*3600) + (dt.minute)*60 + dt.second
     def set_bus(self, rt,dt, variation=0):
+        
+        """
+        Given a route and a date time, set a bus to run through the network
+
+        """
         route=self.routes[str(rt)][variation][1:]
         print('Travelling from', self.stops_dict[str(rt)]['stop_name'], 'to', self.routes[str(rt)][variation][0])
         self.run_bus_journey(route,dt)
@@ -112,7 +125,51 @@ class bus_network():
 
         print('failed for', (failures/total)*100, 'route variations')
         print('failed totally for', (total_failures/total_routes)*100,'% of routes')
+    
+    def get_links(self,stopA):
+        """
+        Get a list of the links that a stop has
+        """
+        return self.nodes[stopA].get_links()
+        
+    def get_stats(self,stopA,stopB,day=None,hour=None):
+        """
+        Get stats about a stop-stop link. Doesn't yet work.
+        """
+        if day == None and hour == None:
+            return self.nodes[stopA].get_basic_info(stopB)
+        
+        elif day == None:
+           return self.nodes[stopA].get_basic_link_info_by_hour(stopB,hour)
+
+        elif hour == None:
+            return self.nodes[stopA].get_basic_link_info_by_day(stopB,day)
+
+        else:
+            return self.nodes[stopA].get_basic_link_info_by_day_hour(stopB,day,hour)
+
+    def get_all_stops(self):
+        return self.stops_dict
+
+    def get_route(self, routename, all_variations = False, variation = 0):
+        try:
+            if all_variations:
+                return self.routes[routename]
+            else:
+                return self.routes[routename][variation]
+        except:
+            return None
+    
+    def get_RTPI(self,stop):
+        import requests
+        import json
+        try:
+            return json.loads(requests.get("https://data.smartdublin.ie/cgi-bin/rtpi/realtimebusinformation?stopid="+str(stop)+"&format=json").text)
+        except:
+            return None
+
 if __name__ == '__main__':
     import time
-   
     b=bus_network(load_from_pickle=True)
+    print(b.get_route('15',all_variations=True))
+    print(b.getRTPI(7602))
