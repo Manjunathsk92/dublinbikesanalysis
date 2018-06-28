@@ -18,4 +18,4 @@ for fstop in d:
 
 f=open('reduced-traffic-map.js','w')
 f.write(json.dumps(d))
-f.close()
+f.close()       

@@ -31,4 +31,4 @@ for route in routes:
             a=int(gf.shape[0]/10)*i
             cd = gf.iloc[a:]
         cf.to_sql(name='dublinBus_stop_model',con=engine, index=False, if_exists='append')
-    print('uploaded route',route)
+print('uploaded route',route)
