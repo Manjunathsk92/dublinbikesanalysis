@@ -11,6 +11,8 @@ For now, the thing would be to test what routes we can't currently model for, an
 
 Also, we need to figure out how we're actually going to use data times and whatnot....
 
+Should generate matrices for predictions
+
 """
 class time_tabler():
 
@@ -29,10 +31,22 @@ class time_tabler():
             with open('/home/student/dbanalysis/dbanalysis/resources/schedule_keys.pickle','rb') as handle:
                 self.schedule_keys = pickle.load(handle)
     
-        with open('/home/student/dbanalysis/dbanalysis/resources/dep_times.pickle','rb') as handle:
+        with open('/home/student/dbanalysis/dbanalysis/resources/clean_routes.pickle','rb') as handle:
             self.dep_times=pickle.load(handle)
-   
-    def get_dep_times(self,route,day):
+    def get_all_routes(self):
+        output=[]
+        for key in self.dep_times:
+            output.append(key)
+        return output        
+    def get_dep_times(self,route,dt):
+        """
+        Generates departure times matrices, the inputs to our linear network model
+        """
+        
+        day = dt.weekday()
+        month = dt.month
+        weekend = day > 4
+      
 
         variations = self.dep_times[route]
         output = []
@@ -44,16 +58,85 @@ class time_tabler():
                     ts = pair['lt'].split(':')
                     total = int(ts[0])*3600 + int(ts[1]) * 60 + int(ts[2])
                     times.append(total)
-            output.append({'pattern':pattern,'times':times})
+            
+            matrix = pd.DataFrame({'actualtime_arr_from':times})
+            matrix['dayofweek']=day
+            matrix['month'] = month
+            matrix['weekend'] = weekend
+            if matrix.shape[0] > 0:
+                output.append({'pattern':pattern,'matrix':matrix})
         return output
                     
 
     def runs_today(self,s_id,day):
+        """
+        Checks if a given schedule id will be running on a given day.
+        """
         if self.schedule_keys[s_id][day]==1:
             return True
         else:
             return False
- 
+
+
+class stop_time_table():
+    """
+    Simple time table dependant on pandas
+    I don't think it can be scaled easily
+    Currentnly only intended to work for a single day
+    """
+    def __init__(self):
+        self.has_data=False
+    
+    def add_times(self,df,link,route):
+        """
+        Add bus times to this time table
+        """
+        df['link']=link
+        df['route'] = route
+        if self.has_data==False:
+            self.has_data=True
+            self.data = df
+        else:
+            self.data = self.data.append(df)
+        self.data=self.data.sort_values(by=['actualtime_arr_to'])
+    def get_times_by_link(self,link):
+        """
+        Times that busses arrive
+        """
+        return self.data[self.data['link']==link]
+    
+    def get_times_by_route(self,link):
+        """
+        Times busses arive
+        """
+        return self.data[self.data['route']==route]
+
+    def get_next_departure(self,link,current_time):
+        """
+        Returns the next time a bus will get to a specified link.
+        Use with Djikstra?
+        """
+        return self.data[(self.data['link']==link)\
+               & (self.data['actualtime_arr_to'] >= current_time)]\
+                ['actualtime_arr_to'][0]
+    
+    def get_all_times(self):
+        return self.data
+
+    def drop_day(self,day):
+        self.data = self.data[self.data['day']!=day]
+
+    def json_response(self,data):
+        """
+        Return data in json form
+        """
+        response = []
+        for row in data.itertuples():
+            pass
+                 
+
+
 if __name__ == '__main__':
     t=time_tabler()
-    print(t.get_dep_times('1',0))
+    import datetime
+    print(t.get_dep_times('1',datetime.datetime.now()))

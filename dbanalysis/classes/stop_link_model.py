@@ -22,11 +22,11 @@ Should be able to model the time taken to get between two stops
         self.buildTravelModel()
         del(self.data)
     def buildDwellTimeModel(self):
-        target = 'dwelltime'
+        target = 'actualtime_dep_from'
         features = ['actualtime_arr_from','dayofweek','month','weekend']
         self.dwell_regr = self.clf.fit(self.data[features],self.data[target])
     def buildTravelModel(self):
-        target= 'traveltime'
+        target= 'actualtime_arr_to'
         features = ['actualtime_dep_from','dayofweek','month','weekend']
         self.travel_regr=self.clf.fit(self.data[features],self.data[target])
     
@@ -41,4 +41,14 @@ Should be able to model the time taken to get between two stops
         row2 = pd.DataFrame([[leavetime,dayofweek,month,weekend]],index=index2)
         arrival_time = self.travel_regr.predict(row2)[0]
         return arrival_time
+    
+    def get_time_to_next_stop_multiple(self,df):
+        """
+        Same as above, but for a matrix containing multiple times
+        """
+        df['actualtime_dep_from']=self.dwell_regr.predict(df)
+        df['actualtime_arr_to'] = self.travel_regr.predict(df[['actualtime_dep_from','dayofweek','month','weekend']])
+        return df[['actualtime_arr_from','actualtime_arr_to','dayofweek','month','weekend']]
+
         
+                    

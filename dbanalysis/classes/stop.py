@@ -16,13 +16,14 @@ Need to add support for routes
 
 from dbanalysis import stop_tools as st
 import os
+from dbanalysis.classes.time_tabler import stop_time_table
 import pandas as pd
 class stop():
 
     def __init__(self,stop_id, coords=None, name=None, from_pickle=True, analyze=False, train_model=True):
         self.data = None
         self.cached_stats = []
-        self.timetable = {}
+        self.timetable = stop_time_table()
 
         if from_pickle:
             pass
@@ -37,7 +38,7 @@ class stop():
                 self.long = coords[1]
             else:
                 import json
-                stops_dict = json.loads(open('/home/student/dbanalysis/stops_trimmed.json','r').read())
+                stops_dict = json.loads(open('/home/student/dbanalysis/dbanalysis/resources/stops_trimmed.json','r').read())
                 self.name = stops_dict[str(stop_id)]['stop_name']
                 self.lat = stops_dict[str(stop_id)]['lat']
                 self.long = stops_dict[str(stop_id)]['lon']            
@@ -46,14 +47,15 @@ class stop():
                 self.train_models()
             if analyze:
                 self.data = get_all_data(self)
+
+    def add_to_time_table(self,day,link,route,df):
+        self.timetable.add_times(df,link,route)        
+
     def get_link_data(self,link):
 
         return st.get_stop_link(self.stop_id,link) 
     def get_timetable(self):
         return self.timetable
-    def add_to_timetable(self,date,time,route,next_stop):
-        if date not in self.timetable:
-            self.timetable[date]={}
             
         self.timetable[date][time] = {'route':route,'next_stop':next_stop}
     def get_all_data(self):
@@ -113,12 +115,15 @@ class stop():
             self.linkmodels[link] = slm.stop_link_model(self.stop_id, link, in_data,clf='Linear')
         del data
         del in_data
-    def  predict(self,link,arrival_time,dayofweek,month,weekend):
+    def predict(self,day,link,route,matrix):
         """
-        Return a full travel time prediction for the journey from this stop to the next link
+        Return a full travel time prediction for the journeys from this stop to the next link. Also append the predictions to this stops timetable.
         """
-        
-        return self.linkmodels[link].get_time_to_next_stop(arrival_time,dayofweek,month,weekend)
+        predicts=self.linkmodels[link].get_time_to_next_stop_multiple(matrix)
+        matrix = predicts
+        self.add_to_time_table(day,link,route,matrix)        
+        matrix['actualtime_arr_from'] = matrix['actualtime_arr_to'] 
+        return matrix[['actualtime_arr_from','dayofweek','month','weekend']]
                 
 
     def get_distance(self,stop=None,coords=None):
