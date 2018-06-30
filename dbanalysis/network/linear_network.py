@@ -6,20 +6,25 @@ Network of bus stops, with models on the go.
 from dbanalysis import route_tools as rt
 from dbanalysis.classes import stop as bus_stop
 import json
+import pickle
 import os
 import datetime
 from dbanalysis.classes import time_tabler
 class bus_network():
 
 
-    def __init__(self,train=False, load_from_pickle=False):
+    def __init__(self,train=False, load_from_pickle=False,load_timetables=True):
         self.stops_dict = json.loads(open('/home/student/dbanalysis/dbanalysis/resources/stops_trimmed.json','r').read())
         stops_map = rt.map_all_stops()
         self.nodes={}
         self.routes = json.loads(open('/home/student/dbanalysis/dbanalysis/resources/trimmed_routes.json','r').read())
         self.route_keys = [i.split('_')[0] for i in os.listdir('/home/student/data/routesplits')]
         self.time_tabler = time_tabler.time_tabler()
-        if load_from_pickle:
+        if load_timetables:
+            import pickle
+            with open('/home/student/dbanalysis/dbanalysis/resources/models/tabledsimple_linear_network1530370190.1135008.pickle', 'rb') as handle:
+                self.nodes = pickle.load(handle)
+        elif load_from_pickle:
             import pickle
             with open('/home/student/dbanalysis/dbanalysis/resources/models/simple_linear_network1530364628.2994666.pickle', 'rb') as handle:
                 self.nodes = pickle.load(handle)
@@ -157,8 +162,5 @@ class bus_network():
 
 if __name__ == '__main__':
     import time
-    b=bus_network(train=False,load_from_pickle=True)
-    import datetime
-    dt=datetime.datetime.now()
-    b.generate_all_timetables(dt)
-    b.dump_network('/home/student/dbanalysis/dbanalysis/resources/models',time_tables=True)
+    b=bus_network()
+    print(b.nodes['4096'].timetable.get_all_times())
