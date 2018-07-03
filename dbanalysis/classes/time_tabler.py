@@ -117,8 +117,8 @@ class stop_time_table():
         Use with Djikstra?
         """
         return self.data[(self.data['link']==link)\
-               & (self.data['actualtime_arr_to'] >= current_time)]\
-                ['actualtime_arr_to'][0]
+               & (self.data['actualtime_arr_from'] >= current_time)].iloc[0]\
+                ['actualtime_arr_to']
     
     def get_all_times(self):
         return self.data

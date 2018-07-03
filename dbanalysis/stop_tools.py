@@ -86,7 +86,16 @@ class stop_getter():
             return total_distance
         else:
             return None
+
+    def get_shape(self,stop,link):
+        if stop in self.stops_map and link in self.stops_map[stop]:
+
+            return [self.get_stop_coords(stop)]+self.stops_map[stop][link]\
+                        + [self.get_stop_coords(link)]
             
+        else:
+            return None
+
 
 if __name__ == '__main__':
     s = stop_getter()

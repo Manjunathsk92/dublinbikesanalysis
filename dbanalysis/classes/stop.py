@@ -24,6 +24,7 @@ class stop():
         self.data = None
         self.cached_stats = []
         self.timetable = stop_time_table()
+        self.weight = None
 
         if from_pickle:
             pass
@@ -47,10 +48,20 @@ class stop():
                 self.train_models()
             if analyze:
                 self.data = get_all_data(self)
-
+            
+           
+            
     def add_to_time_table(self,day,link,route,df):
         self.timetable.add_times(df,link,route)        
-
+    
+    def get_foot_links(self):
+        import pickle
+        with open('/home/student/dbanalysis/dbanalysis/resources/stop_foot_distance.pickle','rb') as handle:
+            foot_stops = pickle.load(handle)
+        self.foot_links={}
+        for x in foot_stops[str(self.stop_id)]:
+            self.foot_links[x[0]] = (x[1]/5)*3600
+    
     def get_link_data(self,link):
 
         return st.get_stop_link(self.stop_id,link) 
