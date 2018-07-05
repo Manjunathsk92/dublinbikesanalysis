@@ -97,8 +97,42 @@ class stop_getter():
             return None
 
 
+class stop_finder():
+
+    def __init__(self):
+        import pickle
+        with open('/home/student/dbanalysis/dbanalysis/resources/stop_clusters.pickle','rb') as handle:
+
+            self.clusters = pickle.load(handle)
+        import haversine
+        from math import inf
+        import json
+        self.stops_dict = json.loads(open('/home/student/dbanalysis/dbanalysis/resources/stops_trimmed.json','rb').read())
+
+    def find_closest_stops(self,lat,lon):
+        from math import inf 
+        clusters = self.clusters
+        while True:
+            min_distance=inf
+            for cluster in clusters:
+                
+                dist=haversine.haversine((lat,lon),(cluster['lat'],cluster['lon'])) 
+                if dist< min_distance:
+                    min_distance = dist
+                    best_group = cluster
+
+            if 'nodes' in best_group:
+                return [self.stops_dict[str(i)] for i in best_group['nodes']]
+            
+            else:
+                clusters = best_group['clusters']
+
+                
+
+
+
+
+
 if __name__ == '__main__':
-    s = stop_getter()
-    print(s.stops_dict.keys())
-    a=s.get_stop_links('7574')[0]
-    print(s.get_stop_distance('7574',a))
+    b=stop_finder()
+    print(b.find_closest_stops(53.498,-6.2603))
