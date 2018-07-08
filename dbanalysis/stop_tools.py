@@ -4,7 +4,8 @@ Set of functions for retrieving and analyzing stop-stop links.
 
 """
 import haversine
-
+import os
+import pandas as pd
 def get_stop_link(stopA,stopB, src='file',merge_weather=False):
     
     """
@@ -138,6 +139,10 @@ class stop_finder():
 
 def random_stop_data():
     a,fromstop,tostop=random_stop_file()
+    weather = pd.read_csv('/home/student/dbanalysis/dbanalysis/resources/cleanweather.csv')
+    weather['dt']=pd.to_datetime(weather['date'])
+    weather['hour']=weather['dt'].dt.hour
+    weather['date']=weather['dt'].dt.date
     df=prep_test_stop(a,weather,fromstop,tostop)
     return df
 
@@ -154,11 +159,8 @@ def random_stop_file():
 
 
 def prep_test_stop(filename,weather,fromstop,tostop):
-    weather = pd.read_csv('/home/student/dbanalysis/dbanalysis/resources/cleanweather.csv')
-    weather['dt']=pd.to_datetime(weather['date'])
-    weather['hour']=weather['dt'].dt.hour
-    weather['date']=weather['dt'].dt.date
     from dbanalysis import headers as hds
+    s_getter = stop_getter()
     df=pd.read_csv(filename,names=hds.get_stop_link_headers())
     df['fromstop']=fromstop
     df['tostop']=tostop
