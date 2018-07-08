@@ -122,12 +122,7 @@ class stop_finder():
                     best_group = cluster
 
             if 'nodes' in best_group:
-                return [{'stop_id':i,\
-                'info':self.stops_dict[str(i)],\
-                'distance':haversine.haversine((lat,lon),\
-                 (self.stops_dict[str(i)]['lat'],\
-                 self.stops_dict[str(i)]['lon']))}\
-                 for i in best_group['nodes']]
+                return [i for i in best_group['nodes']]
             
             else:
                 clusters = best_group['clusters']
@@ -135,44 +130,6 @@ class stop_finder():
 
 
 
-
-def random_stop_data():
-    a,fromstop,tostop=random_stop_file()
-    df=prep_test_stop(a,weather,fromstop,tostop)
-    return df
-
-
-def random_stop_file():
-    import random
-    stop_dirs=os.listdir('/home/student/data/stops')
-    stop = random.choice(stop_dirs)
-    c=os.listdir('/home/student/data/stops/'+stop)
-    for i in c:
-        if i != 'orphans.csv':
-            return '/home/student/data/stops/'+stop+'/'+i, stop, i.split('.')[0]
-    return None
-
-
-def prep_test_stop(filename,weather,fromstop,tostop):
-    weather = pd.read_csv('/home/student/dbanalysis/dbanalysis/resources/cleanweather.csv')
-    weather['dt']=pd.to_datetime(weather['date'])
-    weather['hour']=weather['dt'].dt.hour
-    weather['date']=weather['dt'].dt.date
-    from dbanalysis import headers as hds
-    df=pd.read_csv(filename,names=hds.get_stop_link_headers())
-    df['fromstop']=fromstop
-    df['tostop']=tostop
-    df['traveltime']=df['actualtime_arr_to']-df['actualtime_dep_from']
-    df['dwelltime']=df['actualtime_dep_from']-df['actualtime_arr_from']
-    df['distance'] = s_getter.get_stop_distance(fromstop,tostop)
-    df['speed'] = df['distance'] / (df['traveltime']/3600)
-
-    df['date']=pd.to_datetime(df['dayofservice'],format= "%d-%b-%y %H:%M:%S").dt.date
-    df['hour']=df['actualtime_arr_from']//3600
-    df = pd.merge(df,weather, on=['date','hour'])
-    return df
-
-
 if __name__ == '__main__':
     b=stop_finder()
-    print(b.find_closest_stops(53.3498,-6.2603))
+    print(b.find_closest_stops(50.498,-6.2603))

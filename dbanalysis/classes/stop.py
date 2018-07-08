@@ -25,7 +25,7 @@ class stop():
         self.cached_stats = []
         self.timetable = stop_time_table()
         self.weight = None
-
+        self.back_links=[]
         if from_pickle:
             pass
         else:

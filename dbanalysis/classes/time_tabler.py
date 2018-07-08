@@ -116,9 +116,13 @@ class stop_time_table():
         Returns the next time a bus will get to a specified link.
         Use with Djikstra?
         """
-        return self.data[(self.data['link']==link)\
-               & (self.data['actualtime_arr_from'] >= current_time)].iloc[0]\
-                ['actualtime_arr_to']
+        
+        a = self.data[(self.data['link']==link)\
+               & (self.data['actualtime_arr_from'] >= current_time)]
+        if a.shape[0]>1:
+            return a.iloc[0][['actualtime_arr_to','route']]
+        else:
+            return None  
     
     def get_all_times(self):
         return self.data
