@@ -1,12 +1,3 @@
-
-
-
-
-
-
-
-
 from subprocess import call
-text = open('ultimate_program.py','r').read()
-print(text)
+call(['cat', 'ultimate_program.py'])
 call(['killall','python'])

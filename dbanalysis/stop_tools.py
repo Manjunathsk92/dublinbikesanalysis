@@ -24,9 +24,11 @@ def get_stop_link(stopA,stopB, src='file',merge_weather=False):
             df['stopB'] = stopB
             
     elif src=='db':
+        #insert method here for grabbing data from database
         pass
  
     if merge_weather:
+        #merge data with weather data .csv
         weather = pd.read_csv('/home/student/data/cleanweather.csv')
         weather['date']=pd.to_datetime(weather['date'])
         weather['hour']=weather['date'].dt.hour
@@ -45,6 +47,12 @@ def get_stop_link(stopA,stopB, src='file',merge_weather=False):
         return df
     
 class stop_getter():
+
+    """
+    Class for grabbing gtfs data about stops.
+    Grabs their coordinates, the stops that they link to, the shape between them.
+    Can calculate the real driving distance between stops based on the stop shapes.
+    """
 
     def __init__(self):
         import pickle
@@ -74,7 +82,7 @@ class stop_getter():
     def get_stop_distance(self,stop,link):
         
         if stop in self.stops_map and link in self.stops_map[stop]:
-
+            #if we have full shape coordinates for a the link, use these
             coords = [self.get_stop_coords(stop)] + self.stops_map[stop][link]\
                             + [self.get_stop_coords(link)]
             total_distance = 0
@@ -85,10 +93,24 @@ class stop_getter():
                 lon2=coords[i+1]['lon']
                 total_distance += haversine.haversine((lat1,lon1),(lat2,lon2))
             return total_distance
+        elif stop in self.stops_dict and link in self.stops_dict:
+            #otherwise if we have the stop coordinates, use these
+            a_data = self.stops_dict[stop]
+            b_data = self.stops_dict[link]
+            lat1=a_data['lat']
+            long1 = a_data['lon']
+            lat2=b_data['lat']
+            long2 = b_data['lon']
+            
+            return haversine.haversine((lat1,long1),(lat2,long2))
+        
         else:
+            #otherwise just return nothing
             return None
 
     def get_shape(self,stop,link):
+        #if we have the shape for this stop link, then return it
+        #can be chained to return route shape between multiple stops
         if stop in self.stops_map and link in self.stops_map[stop]:
 
             return [self.get_stop_coords(stop)]+self.stops_map[stop][link]\
@@ -99,6 +121,12 @@ class stop_getter():
 
 
 class stop_finder():
+
+    """
+    Class for finding the closest stops to a given {lat,lng} location.
+    Uses a pickle file of nested clusters and cluster centres.
+    Should add method for calculating actual distance to closest stops with google distance matrix.
+    """
 
     def __init__(self):
         import pickle
@@ -111,6 +139,11 @@ class stop_finder():
         self.stops_dict = json.loads(open('/home/student/dbanalysis/dbanalysis/resources/stops_trimmed.json','rb').read())
 
     def find_closest_stops(self,lat,lon):
+        """
+        Recursively work through the clustered file until a group of stops close to the user is found.
+        Should run in O(1) time as the nested clusters only go three or four deep.
+        Distance only has to be calculated to 30 cluster centers.
+        """
         from math import inf 
         clusters = self.clusters
         while True:
@@ -135,9 +168,14 @@ class stop_finder():
 
 
 
-
+#functions for retrieving and prepping data on a random stop
 
 def random_stop_data():
+    """
+    Retrieves and preps the data on a random stop.
+
+    Weather data seems to include NaN values.
+    """
     a,fromstop,tostop=random_stop_file()
     weather = pd.read_csv('/home/student/dbanalysis/dbanalysis/resources/cleanweather.csv')
     weather['dt']=pd.to_datetime(weather['date'])
@@ -174,6 +212,19 @@ def prep_test_stop(filename,weather,fromstop,tostop):
     df = pd.merge(df,weather, on=['date','hour'])
     return df
 
+def prep_test_stop_no_weather(filename,fromstop,tostop):
+    from dbanalysis import headers as hds
+    df['fromstop']=fromstop
+    df['tostop']=tostop
+    df['traveltime']=df['actualtime_arr_to']-df['actualtime_dep_from']
+    df['dwelltime']=df['actualtime_dep_from']-df['actualtime_arr_from']
+    df['distance'] = s_getter.get_stop_distance(fromstop,tostop)
+    df['speed'] = df['distance'] / (df['traveltime']/3600)
+
+    df['date']=pd.to_datetime(df['dayofservice'],format= "%d-%b-%y %H:%M:%S").dt.date
+    df['hour']=df['actualtime_arr_from']//3600
+    df['day'] = df['dt'].dt.dayofweek
+    return df
 
 if __name__ == '__main__':
     b=stop_finder()

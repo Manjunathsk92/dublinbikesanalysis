@@ -7,7 +7,7 @@ def get_trips_days(df):
     """
 	For a given route dataframe, create a dictionary matching
 	trip ids with their days of service
-
+    I don't think we use this function anymore
 	"""
     trips_days = {}
     trips = df['tripid'].unique()
@@ -78,6 +78,7 @@ def map_all_stops(load_from_pickle=True):
     """
     Map all stops to the stops with which they share a connection
     Utilizes the function above.
+    I don't think this function is used anymore.
     """
     if os.path.exists('/home/student/data/stopsmap.pickle') and load_from_pickle:
         with open('/home/student/data/stopsmap.pickle','rb') as handle:
@@ -166,6 +167,18 @@ def get_munged_route_data(routename):
 def get_munged_route_data_and_orphans(routename):
     """
     Same as above, but also returns a dataframe of 'oprhans' --> the stops that don't connect to the next stop on any given route.
+
+    There is, apparently, a much easier way of doing this, just using pd.shift, pd.concat, and then dropping the rows that don't match up properly.
+
+    e.g 
+
+    df = pd.concat([route, route.shift(1)], axis=1)
+    df=df[df['progrnumber1'] == df['progrnumber2']+1]
+
+    Or something. Not sure if this is faster, but I imagine it might be.
+
+    Anyway it doesn't really matter as the code here is fast enough and we only have to run it once. 
+
     """
     missing_stops = set([2176, 2567, 7560, 7053, 7567, 2066, 2067, 5013, 5014, 5015, 662, 663, 4508, 7325, 7326, 2207, 2208, 7457, 286, 2212, 2087, 6185, 6186, 7475, 7220, 7607, 4537, 7483, 7544, 7290, 6216, 7497, 7164, 1364, 2780, 2781, 2782, 2783, 1375, 1376, 4319, 1379, 7269, 486, 2791, 4455, 2793, 2794, 7402, 7661, 2798, 2799, 1645, 4717, 7666, 7667, 7668, 4724, 2806, 2807, 2808, 7417, 7418, 7291, 380, 7165])
     rn = routename.split('_')[0]

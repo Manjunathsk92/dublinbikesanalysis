@@ -91,6 +91,7 @@ class stop():
         df['dayofweek'] = df['dt'].dt.dayofweek
         df['month'] = df['dt'].dt.month
         df['weekend']=df['dayofweek']>4
+        #merge the weather data --> maybe
         if merge_weather:
             df['date']=df['dt'].dt.date
             df['hour']=df['actualtime_arr_from']//3600
@@ -140,6 +141,7 @@ class stop():
     def get_distance(self,stop=None,coords=None):
         """
         Finds the distance between stops (as the crow flies)
+        Kind of deprecated as the stop_getter class in stop_tools does this alot better.
         """
         import haversine
         if coords != None:
@@ -161,6 +163,8 @@ class stop():
     def get_links(self):        
         return self.stop_links
     
+
+    #analysis functions. Never been used/tested/implemented in any way
     def get_basic_info(self,df,link):
         """
         Gets some basic stats about this stop, as long as its dataframe is supplied
