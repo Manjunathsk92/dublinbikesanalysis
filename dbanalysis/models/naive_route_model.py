@@ -1,3 +1,8 @@
+"""
+This is deprecated, and probably doesn't even work anymore.
+Was used at one stage to test stop_link models.
+"""
+
 import pandas as pd
 import json
 from dbanalysis import route_tools

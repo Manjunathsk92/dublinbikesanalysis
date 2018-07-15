@@ -40,7 +40,9 @@ class time_tabler():
         return output        
     def get_dep_times(self,route,dt):
         """
-        Generates departure times matrices, the inputs to our linear network model
+        Generates departure times matrices, the inputs to chained route models.
+        Output is an array of {departure time matrix, pattern} - one pattern and
+        one matrix for each route variation found.
         """
         
         day = dt.weekday()
@@ -82,14 +84,16 @@ class stop_time_table():
     """
     Simple time table dependant on pandas
     I don't think it can be scaled easily
-    Currentnly only intended to work for a single day
+    Currently only intended to work for a single day
     """
     def __init__(self):
         self.has_data=False
     
     def add_times(self,df,link,route):
         """
-        Add bus times to this time table
+        Add bus times to this time table.
+        Currently all data is stored in a singular large dataframe.
+        Optimization might be possible by maintaining seperate dataframes for each route, link etc.
         """
         df['link']=link
         df['route'] = route
@@ -101,20 +105,20 @@ class stop_time_table():
         self.data=self.data.sort_values(by=['actualtime_arr_to'])
     def get_times_by_link(self,link):
         """
-        Times that busses arrive
+        Times that busses arrive for a particular link
         """
         return self.data[self.data['link']==link]
     
-    def get_times_by_route(self,link):
+    def get_times_by_route(self,route):
         """
-        Times busses arive
+        Times busses arive for particular route
         """
         return self.data[self.data['route']==route]
 
     def get_next_departure(self,link,current_time):
         """
         Returns the next time a bus will get to a specified link.
-        Use with Djikstra?
+        Essential to the route finding algorithm
         """
         
         a = self.data[(self.data['link']==link)\
@@ -128,15 +132,17 @@ class stop_time_table():
         return self.data
 
     def drop_day(self,day):
+        """
+        Drop a whole day's worth of data. Presumably for when time tables are recalculated.
+        """
         self.data = self.data[self.data['day']!=day]
 
-    def json_response(self,data):
+    def add_to_database(self,day):
         """
-        Return data in json form
+        Need CRUD method for getting this information into a database, presumably for scaling application
         """
-        response = []
-        for row in data.itertuples():
-            pass
+        pass
+
                  
 
 

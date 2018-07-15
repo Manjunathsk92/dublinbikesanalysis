@@ -2,6 +2,8 @@
 
 Classes for holding statistical data about stops and stop links 
 
+Actually, this was never used. Can be deleted i think.
+
 """
 import numpy as np
 

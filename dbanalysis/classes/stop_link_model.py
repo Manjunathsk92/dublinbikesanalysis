@@ -8,6 +8,10 @@ Should be able to model the time taken to get between two stops
     """
     
     def __init__(self,from_stop,to_stop,data,clf='Linear'):
+        """
+        Choose the regressor (clf should be regressor sorry) used to model dwelltime and travel time.
+        More regressors can be implemented as 'elif' statements.
+        """
         if clf not in ('neural','forest'):
             from sklearn.linear_model import LinearRegression
             self.clf = LinearRegression(fit_intercept=True)
@@ -20,7 +24,9 @@ Should be able to model the time taken to get between two stops
         self.data = data
         self.buildDwellTimeModel()
         self.buildTravelModel()
+        #delete data to ensure RAM efficiency
         del(self.data)
+
     def buildDwellTimeModel(self):
         #train a single regressor for dwell time
         target = 'actualtime_dep_from'
@@ -49,7 +55,8 @@ Should be able to model the time taken to get between two stops
     def get_time_to_next_stop_multiple(self,df):
         
         """
-        Same as above, but for a matrix containing multiple times
+        Same as above, but for a matrix containing multiple times.
+        Returns a dataframe that can be used as a timetable.
         """
         
         df['actualtime_dep_from']=self.dwell_regr.predict(df)

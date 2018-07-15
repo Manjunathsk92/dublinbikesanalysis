@@ -27,6 +27,7 @@ class stop():
         self.weight = None
         self.back_links=[]
         if from_pickle:
+            #currently no method for loading these from pickles.
             pass
         else:
             self.stop_id = stop_id
@@ -117,7 +118,9 @@ class stop():
     
     def train_models(self):
         """
-        Train models for this stop. Currently, it is agnostic as to the route being modelled for
+        Train models for this stop. Currently, it is agnostic as to the route being modelled for.
+        Later, there should probably be seperate dwell time models for every route, though this is a bit
+        of a burden I think. Or the dwell time model will have to accept route id as a feature.
         """
         from dbanalysis.classes import stop_link_model as slm
         data = self.get_all_data()
@@ -125,8 +128,10 @@ class stop():
         for link in self.stop_links:
             in_data = data[data['stopB']==link]            
             self.linkmodels[link] = slm.stop_link_model(self.stop_id, link, in_data,clf='Linear')
+            del in_data
+        #make sure to delete all data.
         del data
-        del in_data
+        
     def predict(self,day,link,route,matrix):
         """
         Return a full travel time prediction for the journeys from this stop to the next link. Also append the predictions to this stops timetable.
