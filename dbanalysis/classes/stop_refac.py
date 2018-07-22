@@ -22,9 +22,10 @@ class stop():
 
     def __init__(self,stop_id, coords=None, name=None, from_pickle=True,\
          analyze=False, train_model=True,train_test=None,validate=False,\
-            model_dwell_time=True,dimension=1):
+            model_dwell_time=True,dimension=1,regressor_type='Linear'):
         
         self.data = None
+        self.regressor_type = regressor_type
         self.model_dwell_time=model_dwell_time
         self.dimension = dimension
         self.validate = validate
@@ -140,8 +141,9 @@ class stop():
         for link in self.stop_links:
             in_data = data[data['stopB']==link]            
             self.linkmodels[link] = slm.stop_link_model(self.stop_id, link,\
-                                     in_data,clf='Linear',train_test=split,\
-                                        dimension = self.dimension,model_dwell_time=self.model_dwell_time)
+                                     in_data,clf=self.regressor_type,train_test=split,\
+                                        dimension = self.dimension,\
+                                        model_dwell_time=self.model_dwell_time)
             del in_data
         #make sure to delete all data.
         del data

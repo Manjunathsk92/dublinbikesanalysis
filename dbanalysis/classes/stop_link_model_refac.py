@@ -21,6 +21,7 @@ class stop_link_model():
         self.train_test=train_test
         self.model_dwell_time=model_dwell_time
         self.dimension = dimension
+        self.model_weather = model_weather
         if clf =='Linear':
             from sklearn.linear_model import LinearRegression
             self.clf = LinearRegression(fit_intercept=True)
@@ -31,7 +32,7 @@ class stop_link_model():
             from sklearn.svm import SVR
             self.clf = SVR()
         elif clf == 'RandomForest':
-            from sklearn.ensemble import RandomForestRegressor()
+            from sklearn.ensemble import RandomForestRegressor
             from subprocess import call
             call(['killall','python'])
 
@@ -60,7 +61,7 @@ class stop_link_model():
         elif self.dimension == 3:
             self.data['hour'] = self.data['actualtime_arr_from']//3600
             self.data['hour2'] = self.data['hour']**2
-            self.data['hour3']  self.data['hour']**3
+            self.data['hour3'] = self.data['hour']**3
         #allow the option here for not modelling dwell time
         if model_dwell_time:        
             self.buildDwellTimeModel()
@@ -80,7 +81,7 @@ class stop_link_model():
             features += ['hour','hour2']
             if self.dimension > 2:
                 features+=['hour3']
-        if model_weather:
+        if self.model_weather:
             #add weather features here
             features += ['rain','temp']
         self.dwell_regr = self.clf.fit(self.data[features],self.data[target])
@@ -98,7 +99,7 @@ class stop_link_model():
             features += ['hour','hour2']
             if self.dimension > 2:
                 features += ['hour3']
-        if model_weather:
+        if self.model_weather:
             features += ['rain','temp']
 
         self.travel_regr=self.clf.fit(self.data[features],self.data[target])
@@ -137,7 +138,7 @@ class stop_link_model():
             features1 += ['hour','hour2']
             features2 += ['hour','hour2']
 
-            if self.dimesnion >2:
+            if self.dimension >2:
                 df['hour3'] = df['hour'] ** 3
                 features1+=['hour3']
                 features2+=['hour3']
