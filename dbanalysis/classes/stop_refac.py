@@ -20,8 +20,13 @@ from dbanalysis.classes.time_tabler import stop_time_table
 import pandas as pd
 class stop():
 
-    def __init__(self,stop_id, coords=None, name=None, from_pickle=True, analyze=False, train_model=True,train_test=None,validate=False):
+    def __init__(self,stop_id, coords=None, name=None, from_pickle=True,\
+         analyze=False, train_model=True,train_test=None,validate=False,\
+            model_dwell_time=True,dimension=1):
+        
         self.data = None
+        self.model_dwell_time=model_dwell_time
+        self.dimension = dimension
         self.validate = validate
         self.timetable = stop_time_table()
         self.weight = None
@@ -30,6 +35,9 @@ class stop():
             #currently no method for loading these from pickles.
             pass
         else:
+            #its important to note here that the stop links are those described in the dublin Bus data,
+            #not in gtfs, and this is probably one reason for why the routefinding algorithm
+            #behaves so crazily.
             self.stop_id = stop_id
             self.stop_links = [i.split('.')[0] for i in \
                         os.listdir('/home/student/data/stops/'+str(stop_id))\
@@ -98,6 +106,8 @@ class stop():
             df['date']=df['dt'].dt.date
             df['hour']=df['actualtime_arr_from']//3600
             weather = pd.read_csv('/home/student/data/cleanweather.csv')
+            #there are one or two rows with NAN in our weather data
+            weather = weather.dropna()
             weather['date']=pd.to_datetime(weather['date'])
             weather['hour']=weather['date'].dt.hour
             weather['date']=weather['date'].dt.date
@@ -110,7 +120,8 @@ class stop():
 
     def load_models(self,picklefile):
         """
-        Load a stops models from pickle files
+        Load a stops models from pickle files.
+        This isn't currently being used.
         """
         import pickle
         from dbanalysis.classes import stop_link_model as slm
@@ -123,12 +134,14 @@ class stop():
         Later, there should probably be seperate dwell time models for every route, though this is a bit
         of a burden I think. Or the dwell time model will have to accept route id as a feature.
         """
-        from dbanalysis.classes import stop_link_model as slm
+        from dbanalysis.classes import stop_link_model_refac as slm
         data = self.get_all_data()
         self.linkmodels = {}
         for link in self.stop_links:
             in_data = data[data['stopB']==link]            
-            self.linkmodels[link] = slm.stop_link_model(self.stop_id, link, in_data,clf='Linear',train_test=split)
+            self.linkmodels[link] = slm.stop_link_model(self.stop_id, link,\
+                                     in_data,clf='Linear',train_test=split,\
+                                        dimension = self.dimension,model_dwell_time=self.model_dwell_time)
             del in_data
         #make sure to delete all data.
         del data

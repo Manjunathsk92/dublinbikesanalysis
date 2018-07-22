@@ -29,7 +29,14 @@ Should be able to model the time taken to get between two stops
                 msk = np.random.rand(len(self.data)) < 0.8
                 self.data = self.data[msk]
             elif train_test == 'year':
-                self.data = self.data[self.data['year']==2016]
+                data = self.data[self.data['year']==2016]
+                print(data.shape)
+                if data.shape[0] > 100:
+                    self.data = data
+                else:
+                    import numpy as np
+                    msk = np.random.rand(len(self.data)) < 0.8
+                    self.data = self.data[msk]
                 
         self.buildDwellTimeModel()
         self.buildTravelModel()
@@ -68,9 +75,9 @@ Should be able to model the time taken to get between two stops
         Returns a dataframe that can be used as a timetable.
         """
         
-        df['actualtime_dep_from']=self.dwell_regr.predict(df)
+        df['actualtime_dep_from']=self.dwell_regr.predict(df[['actualtime_arr_from','dayofweek','month','weekend']])
         df['actualtime_arr_to'] = self.travel_regr.predict(df[['actualtime_dep_from','dayofweek','month','weekend']])
-        return df[['actualtime_arr_from','actualtime_arr_to','dayofweek','month','weekend']]
+        return df
 
         
                     
