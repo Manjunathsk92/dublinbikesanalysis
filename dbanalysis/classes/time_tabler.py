@@ -89,12 +89,13 @@ class stop_time_table():
     def __init__(self):
         self.has_data=False
     
-    def add_times(self,df,link,route):
+    def add_times(self,df,link,route, stop_id):
         """
         Add bus times to this time table.
         Currently all data is stored in a singular large dataframe.
         Optimization might be possible by maintaining seperate dataframes for each route, link etc.
         """
+        df['stop_id']=stop_id
         df['link']=link
         df['route'] = route
         if self.has_data==False:

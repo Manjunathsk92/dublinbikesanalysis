@@ -164,7 +164,7 @@ def get_munged_route_data(routename):
 
 
 
-def get_munged_route_data_and_orphans(routename):
+def get_munged_route_data_and_orphans(routename,year='2017'):
     """
     Same as above, but also returns a dataframe of 'oprhans' --> the stops that don't connect to the next stop on any given route.
 
@@ -185,7 +185,11 @@ def get_munged_route_data_and_orphans(routename):
     stops_mapped = map_all_stops()
     import dbanalysis.headers as hds
     headers = hds.get_route_headers()
-    df = pd.read_csv('/home/student/ResearchPracticum/data/routesplits/'+routename,names=headers)
+    if year == '2017':
+        df = pd.read_csv('/data/routesplits/'+routename,names=headers)
+    elif year == '2016':
+       df = pd.read_csv('/data/routesplits2016/'+routename,names=headers)
+
     df = df.sort_values(axis=0,by=['tripid','dayofservice','actualtime_arr'])
     
     tracking = False

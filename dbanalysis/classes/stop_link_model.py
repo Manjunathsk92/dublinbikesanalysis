@@ -7,11 +7,12 @@ class stop_link_model():
 Should be able to model the time taken to get between two stops
     """
     
-    def __init__(self,from_stop,to_stop,data,clf='Linear'):
+    def __init__(self,from_stop,to_stop,data,clf='Linear',train_test=None):
         """
         Choose the regressor (clf should be regressor sorry) used to model dwelltime and travel time.
         More regressors can be implemented as 'elif' statements.
         """
+        self.train_test=train_test
         if clf not in ('neural','forest'):
             from sklearn.linear_model import LinearRegression
             self.clf = LinearRegression(fit_intercept=True)
@@ -22,6 +23,14 @@ Should be able to model the time taken to get between two stops
         self.from_stop = from_stop
         self.to_stop = to_stop
         self.data = data
+        if train_test!=None:
+            if train_test == 'random':
+                import numpy as np
+                msk = np.random.rand(len(self.data)) < 0.8
+                self.data = self.data[msk]
+            elif train_test == 'year':
+                self.data = self.data[self.data['year']==2016]
+                
         self.buildDwellTimeModel()
         self.buildTravelModel()
         #delete data to ensure RAM efficiency

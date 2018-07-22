@@ -20,15 +20,21 @@ class bus_network():
         self.routes = json.loads(open('/home/student/dbanalysis/dbanalysis/resources/trimmed_routes.json','r').read())
         self.route_keys = [i.split('_')[0] for i in os.listdir('/home/student/data/routesplits')]
         self.time_tabler = time_tabler.time_tabler()
+        
         if load_timetables:
+            #load with models built and timetables computed
             import pickle
-            with open('/home/student/dbanalysis/dbanalysis/resources/models/tabledsimple_linear_network1530370190.1135008.pickle', 'rb') as handle:
+            with open('/home/student/networkpickle', 'rb') as handle:
                 self.nodes = pickle.load(handle)
+
         elif load_from_pickle:
+            #load with models already built
             import pickle
-            with open('/home/student/dbanalysis/dbanalysis/resources/models/simple_linear_network1530364628.2994666.pickle', 'rb') as handle:
+            with open('/home/student/dbanalysis/dbanalysis/resources/models/\
+            simple_linear_network1530364628.2994666.pickle', 'rb') as handle:
                 self.nodes = pickle.load(handle)
-        else:
+        elif train:
+            #load and train models
             for stop in [stop for stop in self.stops_dict\
                     if os.path.isdir('/home/student/data/stops/'+str(stop))\
                     and len(os.listdir('/home/student/data/stops/'+str(stop))) > 1]:
@@ -38,7 +44,7 @@ class bus_network():
                                     name=self.stops_dict[str(stop)]['stop_name'],\
                                     coords=[self.stops_dict[str(stop)]['lat'],\
                                     self.stops_dict[str(stop)]['lon']]\
-                                    , from_pickle = not train))
+                                    , from_pickle = False))
                      
             print('Only found data for', len(self.nodes) / len(stops_map), 'stops')
 
@@ -64,7 +70,7 @@ class bus_network():
     def run_bus_journey(self,route, dt):
         """
         Run a bus down a route and print a set of timetables for that route.
-        
+        This method is deprecated and might not even work to be honest.
         """
         year,day,month,monthday,weekend,total_time = self.prep_datetime(dt)
         for i in range(0, len(route)-1):
@@ -82,7 +88,6 @@ class bus_network():
     def prep_datetime(self,dt):
         """
         If a datetime isn't entered, convert it to a datetime.
-
         Then break the datetime down into features for the model
         """
         import datetime
@@ -91,7 +96,7 @@ class bus_network():
             dt=datetime.datetime(dt)
         return dt.year, dt.weekday(), dt.month, dt.day, dt.day > 4, (dt.hour*3600) + (dt.minute)*60 + dt.second
     
-    
+    # methods for viewing stop data. Untested. Unused, as of present. Could be worked into django api.
     def get_links(self,stopA):
         """
         Get a list of the links that a stop has
@@ -127,17 +132,27 @@ class bus_network():
             return None
     
     def get_RTPI(self,stop):
+        """
+        Returns dublin bus rtpi data for a stop. Employed by the django api.
+        """
         import requests
         import json
         try:
             return json.loads(requests.get("https://data.smartdublin.ie/cgi-bin/rtpi/realtimebusinformation?stopid="+str(stop)+"&format=json").text)
         except:
             return None
+    
     def generate_timetables_route(self,pattern,matrix,day,route):
+        """
+        Predicts and saves timetables for every stop on a given route per day
+        """
         for i in range(0, len(pattern)-1):
             matrix = self.nodes[pattern[i]].predict(day,pattern[i+1],route,matrix)
 
     def generate_all_timetables(self,dt):
+        """
+        Tries to generate all timetables for a given dt
+        """
         day = dt.weekday()
         import time
         t1=time.time()
@@ -160,7 +175,4 @@ class bus_network():
         print('Generated in', time.time()-t1, 'seconds')
         print('Failed for', fails)
 
-if __name__ == '__main__':
-    import time
-    b=bus_network()
-    print(b.nodes['4096'].timetable.get_all_times())
+

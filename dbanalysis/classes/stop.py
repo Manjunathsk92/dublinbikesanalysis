@@ -20,9 +20,8 @@ from dbanalysis.classes.time_tabler import stop_time_table
 import pandas as pd
 class stop():
 
-    def __init__(self,stop_id, coords=None, name=None, from_pickle=True, analyze=False, train_model=True):
+    def __init__(self,stop_id, coords=None, name=None, from_pickle=True, analyze=False, train_model=True,train_test=None):
         self.data = None
-        self.cached_stats = []
         self.timetable = stop_time_table()
         self.weight = None
         self.back_links=[]
@@ -46,14 +45,14 @@ class stop():
                 self.long = stops_dict[str(stop_id)]['lon']            
                 del(stops_dict)
             if train_model: 
-                self.train_models()
+                self.train_models(split=train_test)
             if analyze:
                 self.data = get_all_data(self)
             
            
             
-    def add_to_time_table(self,day,link,route,df):
-        self.timetable.add_times(df,link,route)        
+    def add_to_time_table(self,link,route,df, stop_id):
+        self.timetable.add_times(df,link,route, stop_id)        
     
     def get_foot_links(self):
         import pickle
@@ -90,6 +89,7 @@ class stop():
         time_format = "%d-%b-%y %H:%M:%S"
         df['dt']=df['dt'] = pd.to_datetime(df['dayofservice'],format=time_format)
         df['dayofweek'] = df['dt'].dt.dayofweek
+        df['year'] = df['dt'].dt.year
         df['month'] = df['dt'].dt.month
         df['weekend']=df['dayofweek']>4
         #merge the weather data --> maybe
@@ -116,7 +116,7 @@ class stop():
         with open(picklefile,'rb') as handle:
             self.linkmodels = pickle.load(handle)
     
-    def train_models(self):
+    def train_models(self,split=None):
         """
         Train models for this stop. Currently, it is agnostic as to the route being modelled for.
         Later, there should probably be seperate dwell time models for every route, though this is a bit
@@ -127,7 +127,7 @@ class stop():
         self.linkmodels = {}
         for link in self.stop_links:
             in_data = data[data['stopB']==link]            
-            self.linkmodels[link] = slm.stop_link_model(self.stop_id, link, in_data,clf='Linear')
+            self.linkmodels[link] = slm.stop_link_model(self.stop_id, link, in_data,clf='Linear',train_test=split)
             del in_data
         #make sure to delete all data.
         del data
@@ -138,7 +138,7 @@ class stop():
         """
         predicts=self.linkmodels[link].get_time_to_next_stop_multiple(matrix)
         matrix = predicts
-        self.add_to_time_table(day,link,route,matrix)        
+        self.add_to_time_table(day,link,route,matrix, self.stop_id)        
         matrix['actualtime_arr_from'] = matrix['actualtime_arr_to'] 
         return matrix[['actualtime_arr_from','dayofweek','month','weekend']]
                 
