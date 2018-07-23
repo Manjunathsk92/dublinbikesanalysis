@@ -195,6 +195,13 @@ def random_stop_file():
             return '/home/student/data/stops/'+stop+'/'+i, stop, i.split('.')[0]
     return None
 
+def stop_data(fromstop,tostop):
+    weather = pd.read_csv('/home/student/dbanalysis/dbanalysis/resources/cleanweather.csv')
+    weather['dt']=pd.to_datetime(weather['date'])
+    weather['hour']=weather['dt'].dt.hour
+    weather['date']=weather['dt'].dt.date
+    df=prep_test_stop('/data/stops/'+fromstop+'/'+tostop+'.csv',weather,fromstop,tostop)
+    return df
 
 def prep_test_stop(filename,weather,fromstop,tostop):
     from dbanalysis import headers as hds
@@ -206,11 +213,16 @@ def prep_test_stop(filename,weather,fromstop,tostop):
     df['dwelltime']=df['actualtime_dep_from']-df['actualtime_arr_from']
     df['distance'] = s_getter.get_stop_distance(fromstop,tostop)
     df['speed'] = df['distance'] / (df['traveltime']/3600)
-
-    df['date']=pd.to_datetime(df['dayofservice'],format= "%d-%b-%y %H:%M:%S").dt.date
+   
+    df['dt']=pd.to_datetime(df['dayofservice'],format= "%d-%b-%y %H:%M:%S")
+    df['date']=df['dt'].dt.date
+    df['day'] = df['dt'].dt.dayofweek 
+    df['month'] = df['dt'].dt.month
     df['hour']=df['actualtime_arr_from']//3600
+    df['year'] = df['dt'].dt.year
+    weather.drop('dt', axis=1,inplace=True)
     df = pd.merge(df,weather, on=['date','hour'])
-    return df
+    return df.dropna()
 
 def prep_test_stop_no_weather(filename,fromstop,tostop):
     from dbanalysis import headers as hds

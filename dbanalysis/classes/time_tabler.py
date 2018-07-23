@@ -39,19 +39,24 @@ class time_tabler():
 
         variations = self.dep_times[route]
         output = []
-        for variation in variations:
+        for index, variation in enumerate(variations):
             pattern = variation['pattern']
             times=[]
-            for pair in variation['leave_times']:
+            busIDs=[]
+            for bus_number, pair in enumerate(variation['leave_times']):
                 if self.runs_today(pair['schedule'],day):
                     ts = pair['lt'].split(':')
                     total = int(ts[0])*3600 + int(ts[1]) * 60 + int(ts[2])
                     times.append(total)
+                    busIDs.append(bus_number)
             
             matrix = pd.DataFrame({'actualtime_arr_from':times})
             matrix['dayofweek']=day
             matrix['month'] = month
             matrix['weekend'] = weekend
+            matrix['variation'] = index
+            matrix['busIDs'] = busIDs
+     
             if matrix.shape[0] > 0:
                 output.append({'pattern':pattern,'matrix':matrix})
         return output
@@ -82,15 +87,19 @@ class stop_time_table():
         Currently all data is stored in a singular large dataframe.
         Optimization might be possible by maintaining seperate dataframes for each route, link etc.
         """
+
         df['stop_id']=stop_id
         df['link']=link
         df['route'] = route
+        df['trip_id'] = ""+route+"-"+df['variation'].astype(str)+"-"+df['busIDs'].astype(str)
         if self.has_data==False:
             self.has_data=True
             self.data = df
         else:
             self.data = self.data.append(df)
         self.data=self.data.sort_values(by=['actualtime_arr_to'])
+        self.add_to_database(self.data)
+
     def get_times_by_link(self,link):
         """
         Times that busses arrive for a particular link
@@ -125,13 +134,17 @@ class stop_time_table():
         """
         self.data = self.data[self.data['day']!=day]
 
-    def add_to_database(self,day):
+    def add_to_database(self, df):
         """
         Need CRUD method for getting this information into a database, presumably for scaling application
         """
-        pass
-
-                 
+        
+        from sqlalchemy import create_engine
+       
+        engine = create_engine("mysql://dublinbus:Ucd4dogs!@127.0.0.1/researchpracticum")
+        con = engine.connect()
+        df.to_sql(con=con, name='TimeTables', if_exists='append')
+        con.close()    
 
 
 if __name__ == '__main__':

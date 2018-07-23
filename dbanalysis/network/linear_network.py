@@ -30,8 +30,7 @@ class bus_network():
         elif load_from_pickle:
             #load with models already built
             import pickle
-            with open('/home/student/dbanalysis/dbanalysis/resources/models/\
-            simple_linear_network1530364628.2994666.pickle', 'rb') as handle:
+            with open('/home/student/dbanalysis/dbanalysis/resources/models/simple_linear_network1530364628.2994666.pickle','rb') as handle:
                 self.nodes = pickle.load(handle)
         elif train:
             #load and train models
@@ -166,13 +165,18 @@ class bus_network():
                 
                 try:
                     self.generate_timetables_route(variation['pattern'],\
-                                        variation['matrix'],\
-                                        day,\
-                                        route)
+                                            variation['matrix'],\
+                                            day,\
+                                            route)
                 except:
-                    fails+=1
+                    fails += 1
+                   
                     
         print('Generated in', time.time()-t1, 'seconds')
         print('Failed for', fails)
 
-
+if __name__ == '__main__':
+    b = bus_network(load_from_pickle = True, load_timetables=False)
+    import datetime
+    dt = datetime.datetime.now()
+    b.generate_all_timetables(dt)

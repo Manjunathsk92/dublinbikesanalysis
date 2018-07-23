@@ -139,16 +139,16 @@ class stop():
         """
         predicts=self.linkmodels[link].get_time_to_next_stop_multiple(matrix)
         matrix = predicts
-        if self.validate:
-            import copy
-            self.stored_data = copy.deepcopy(matrix)
+        #if self.validate:
+        #    import copy
+        #    self.stored_data = copy.deepcopy(matrix)
         self.add_to_time_table(day,link,route,matrix,self.stop_id)
         #add stop_id above        
         matrix['actualtime_arr_from'] = matrix['actualtime_arr_to']
-        if self.validate:
-            return matrix
-        else: 
-            return matrix[['actualtime_arr_from','dayofweek','month','weekend']]
+        #if self.validate:
+        #    return matrix
+         
+        return matrix[['actualtime_arr_from','dayofweek','month','weekend','variation', 'busIDs']]
                 
 
     def get_distance(self,stop=None,coords=None):
