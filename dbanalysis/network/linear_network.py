@@ -157,7 +157,6 @@ class bus_network():
         t1=time.time()
         fails=0
         routes = self.time_tabler.get_all_routes()
-        print(routes)
         for route in routes:
             dept_times = self.time_tabler.get_dep_times(route,dt)
             
@@ -170,7 +169,12 @@ class bus_network():
                                             route)
                 except:
                     fails += 1
-                   
+        
+        to_concat = []
+        for node in self.nodes:
+            to_concat.append(self.nodes[node].timetable.data)
+        df = pd.concat(to_concat,axis=0)
+        self.nodes['7612'].timetable.add_to_database(df) # CHANGE THIS using specific stop to add to df to database. Use something more relative. 
                     
         print('Generated in', time.time()-t1, 'seconds')
         print('Failed for', fails)

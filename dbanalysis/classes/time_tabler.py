@@ -98,7 +98,6 @@ class stop_time_table():
         else:
             self.data = self.data.append(df)
         self.data=self.data.sort_values(by=['actualtime_arr_to'])
-        self.add_to_database(self.data)
 
     def get_times_by_link(self,link):
         """
