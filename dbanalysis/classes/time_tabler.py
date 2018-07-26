@@ -94,10 +94,10 @@ class stop_time_table():
         df['trip_id'] = ""+route+"-"+df['variation'].astype(str)+"-"+df['busIDs'].astype(str)
         if self.has_data==False:
             self.has_data=True
-            self.data = df
+            self.to_concat.append(df)
+            self.data = None
         else:
-            self.data = self.data.append(df)
-        self.data=self.data.sort_values(by=['actualtime_arr_to'])
+            self.to_concat.append(df)
 
     def get_times_by_link(self,link):
         """

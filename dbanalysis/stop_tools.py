@@ -22,7 +22,7 @@ def get_stop_link(stopA,stopB, src='file',merge_weather=False):
             df=pd.read_csv('/home/student/data/stops/'+str(stopA) +'/' + str(stopB) +'.csv', names=hds.get_stop_link_headers())
             df['stopA'] = stopA
             df['stopB'] = stopB
-            
+            len_df_1 = len(df)            
     elif src=='db':
         #insert method here for grabbing data from database
         pass
@@ -41,7 +41,10 @@ def get_stop_link(stopA,stopB, src='file',merge_weather=False):
        'plannedtime_dep_from', 'actualtime_arr_from', 'actualtime_dep_from',
        'plannedtime_arr_to', 'actualtime_arr_to', 'routeid', 'stopA', 'stopB','hour', 'dewpt', 'msl', 'rain', 'rhum', 'temp', 'vappr',
        'wetb']
-        return pd.merge(df,weather,on=['date','hour'])[cols]
+        a= pd.merge(df,weather,on=['date','hour'])[cols]
+        len_df2 = len(a)
+        print(len_df_1,len_df2)
+        return a
 
     else:
         return df
@@ -201,6 +204,7 @@ def stop_data(fromstop,tostop):
     weather['hour']=weather['dt'].dt.hour
     weather['date']=weather['dt'].dt.date
     df=prep_test_stop('/data/stops/'+fromstop+'/'+tostop+'.csv',weather,fromstop,tostop)
+    del weather
     return df
 
 def prep_test_stop(filename,weather,fromstop,tostop):
@@ -222,6 +226,8 @@ def prep_test_stop(filename,weather,fromstop,tostop):
     df['year'] = df['dt'].dt.year
     weather.drop('dt', axis=1,inplace=True)
     df = pd.merge(df,weather, on=['date','hour'])
+    del weather
+    del s_getter
     return df.dropna()
 
 def prep_test_stop_no_weather(filename,fromstop,tostop):

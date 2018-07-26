@@ -1,4 +1,4 @@
-#A set of tools for analyzing dublin bus data
+## A set of tools for analyzing dublin bus data
 Includes:
 * route_tools -> functions for splitting dublin bus data
 * scripts -> more functions for splitting bus data, and processing gtfs data

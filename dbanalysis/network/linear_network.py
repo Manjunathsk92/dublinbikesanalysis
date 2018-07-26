@@ -30,7 +30,7 @@ class bus_network():
         elif load_from_pickle:
             #load with models already built
             import pickle
-            with open('/home/student/dbanalysis/dbanalysis/resources/models/simple_linear_network1530364628.2994666.pickle','rb') as handle:
+            with open('/home/student/dbanalysis/dbanalysis/resources/models/simple_linear_network1532452086.8646586.pickle','rb') as handle:
                 self.nodes = pickle.load(handle)
         elif train:
             #load and train models
@@ -172,6 +172,8 @@ class bus_network():
         
         to_concat = []
         for node in self.nodes:
+            self.nodes[node].timetable.data = pd.concat(self.nodes[node].timetable.to_concat,axis=0)
+            self.nodes[node].timetable.data = pd.sort_values(self.nodes[node].timetable.data,by=['actualtime_arr_from'])
             to_concat.append(self.nodes[node].timetable.data)
         df = pd.concat(to_concat,axis=0)
         self.nodes['7612'].timetable.add_to_database(df) # CHANGE THIS using specific stop to add to df to database. Use something more relative. 
