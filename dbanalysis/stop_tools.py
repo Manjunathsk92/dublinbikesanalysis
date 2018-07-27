@@ -15,7 +15,7 @@ def get_stop_link(stopA,stopB, src='file',merge_weather=False):
     import pandas as pd
     from dbanalysis import headers as hds
     if src== 'file':
-        if not os.path.exists('/home/student/data/stops/'+str(stopA) +'/' + str(stopB) +'.csv'):
+        if not os.path.exists('/data/stops/'+str(stopA) +'/' + str(stopB) +'.csv'):
             print('Error - stop link data not on disk')
             return None
         else:
@@ -243,6 +243,18 @@ def prep_test_stop_no_weather(filename,fromstop,tostop):
     df['hour']=df['actualtime_arr_from']//3600
     df['day'] = df['dt'].dt.dayofweek
     return df
+
+#Method to get the travel time for missing link
+def get_missing_links_traveltime(prevstop, stop1, stop2, traveltime):
+    if prevstop!='':
+        previous_dist=stop_getter().get_stop_distance(prevstop, stop1)
+        speed=previous_dist/traveltime
+    else :
+        # If traveltime for previous link is not available, calculate traveltime assuming a speed of 50km/hr.
+        speed=0.0138
+    current_link_distance=stop_getter().get_stop_distance(stop1, stop2)
+    current_link_traveltime=current_link_distance/speed
+    return current_link_traveltime
 
 if __name__ == '__main__':
     b=stop_finder()
