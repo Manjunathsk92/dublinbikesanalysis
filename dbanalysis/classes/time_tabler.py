@@ -92,6 +92,7 @@ class stop_time_table():
         df['link']=link
         df['route'] = route
         df['trip_id'] = ""+route+"-"+df['variation'].astype(str)+"-"+df['busIDs'].astype(str)
+        self.to_concat = []
         if self.has_data==False:
             self.has_data=True
             self.to_concat.append(df)
