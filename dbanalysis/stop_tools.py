@@ -256,6 +256,38 @@ def get_missing_links_traveltime(prevstop, stop1, stop2, traveltime):
     current_link_traveltime=current_link_distance/speed
     return current_link_traveltime
 
+
+def fake_data_frame(route,stop1,stop2,index):
+    """
+    Alternative method for imputing missing stop links.
+    Returns a fake dataframe
+    """
+    s_getter = stop_getter()
+    if index == 0:
+        #if the first stop in a route is missing
+        # find the first existing dataframe in the route, and use that to impute the distance
+        pass
+
+    else:
+        #find first previous data frame
+        #find next data frame
+
+        #if there is no previous data frame and there is a next data frame
+
+
+        #if the us a previous data frame but no next data frame
+
+
+        #if there is both a previous and a next dataframe
+
+
+        pass
+
+
+
+
+
+
 if __name__ == '__main__':
     b=stop_finder()
     print(b.find_closest_stops(53.3498,-6.2603))

@@ -37,41 +37,11 @@ class BRModel():
             elif rgr == 'Neural':
                 from sklearn.neural_network import MLPRegressor as mlpr
                 self.rgr = mlpr(hidden_layer_sizes=(80,80,80,80))
-                from sklearn.preprocessing import normalize
-                self.X,self.norm=normalize(self.data[features+['traveltime']],axis=1,return_norm=True)
-
-                years = self.data['year']
-                distances = self.data['distance']
-                traveltimes = self.data['traveltime'] 
-                del(self.data)
+                from sklearn.preprocessing import MinMaxScaler
+                self.transformer = MinMaxScaler()
+                self.data=self.transformer.fit_transform(self.data[features+['traveltime']])
                 self.data = pd.DataFrame(self.X,columns = self.features+['traveltime'])
-                self.data['norm'] = self.norm
-                self.data['realtraveltime'] = traveltimes 
-                self.data['distances'] = distances
-                self.data['year'] = years
-                self.train = self.data[self.data['year']==2016]
-                self.test = self.data[self.data['year']==2017]
-                del(self.data)
-                self.train_X = self.train[self.features].values
-                self.train_Y = self.train['traveltime'].values
-                del(self.train)
-                self.test_1_X = self.test[features].values
-                self.test_1_Y = self.test['traveltime'].values
-                self.test_2_norm = self.test[self.test['distances'] == self.test['distances'].max()]['norm']
-                self.test_2_real = self.test[self.test['distances'] == self.test['distances'].max()]['realtraveltime']
-                
-
-                self.test_2_X = self.test[self.test['distances'] == self.test['distances'].max()][features].values
-                self.test_2_Y = self.test[self.test['distances'] == self.test['distances'].max()]['traveltime'].values
-                self.test_3_X = self.test[self.test['distances'] == self.test['distances'].median()][features].values
-                self.test_3_Y = self.test[self.test['distances'] == self.test['distances'].median()]['traveltime'].values
-                del(self.test)
-                
                 del(self.X)
-                
-                                
-
- 
             if mode == 'validate':
                 if self.regr_type == 'Neural':
                     self.validate_neural()
@@ -80,6 +50,26 @@ class BRModel():
             elif mode == 'production':
                 self.build_full_model()
                 self.dump_model()
+    def build_model():
+        import numpy as np
+        if self.verbose:
+            print('building model')
+        #how many rows are we going to train on. Here we just randomly pick 50% of the samples and use that. Full df is probably too large
+        msk = np.random.rand(len(self.data)) < 0.5
+        self.data = self.data[msk]
+        del(msk)
+        self.model = self.rgr.predict(self.data[features].values,self.data[msk].values)
+        del(self.data)
+    def dump_model(self):
+        import pickle
+        import time
+        t = int(time.time())
+        name = str(self.route) + '_' + self.(variation) + '_' + str(time.time()) +'.bin'
+        with open('/data/BRModels/models/'+name,'wb') as handle:
+            pickle.dump(self,handle,protocol = pickle.HIGHEST_PROTOCOL) 
+        print('Saved Model')
+    def predict(self,X):
+        return self.model.predict(X)
     def validate_neural(self):
         print('training regressor')
         self.model = self.rgr.fit(self.train_X,self.train_Y)
