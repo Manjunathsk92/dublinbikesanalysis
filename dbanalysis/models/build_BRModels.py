@@ -1,5 +1,6 @@
 import os
-from dbanalysis.models import BRModel
+import pickle
+from dbanalysis.models import BRM
 from subprocess import call
 base_directory = '/data/BRModels'
 call(['mkdir',base_directory])
@@ -9,23 +10,22 @@ models_directory = '/data/BRModels/models/'
 logs_directory = '/data/BRModels/logs/'
 import json
 routes = json.loads(open('/home/student/dbanalysis/dbanalysis/resources/trimmed_routes.json').read())
+count = 0
+total = 0
+for route in routes:
+    total += len(routes[route])
 for route in routes:
 
     for variation in range(0, len(routes[route])):
-
-        model = BRM(route,variation,rgr_type='Neural',features = [])
-        import numpy as np
-        msk = np.random.rand(len(model.data)) < 0.5
-        #simply to big to use all of the data.
-        #shame we don't have a more elegant approach to this
-        model.data = model.data[msk]
-        from sklearn.preprocessing import MinMaxScaler as mms
-        model.X_transformer = mms().fit(model.data[model.features])
-        model.Y_transformer = mms().fit(model.data['traveltime'])
-        train_X = model.X_transformer.transform(model.data[model.features])
-        train_Y = model.Y_transformer.transfrom(model.data['traveltime'])
-        del(model.data)
-        model.model = model.rgr.fit(train_X,train_Y)
-        del(train_X)
-        del(train_Y)
+        count +=1
+        print(route,variation)
+        try:
+            print(count,'/',total)
         
+            model = BRM.BRModel(str(route),variation,rgr='Neural',mode='build')
+            with open('/data/BRM/'+str(route)+'_'+str(variation)+'.bin','wb') as handle:
+                pickle.dump(model,handle,protocol=pickle.HIGHEST_PROTOCOL)
+        except:
+            pass
+    
+           

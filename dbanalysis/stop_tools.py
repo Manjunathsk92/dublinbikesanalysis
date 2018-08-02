@@ -144,7 +144,7 @@ class stop_finder():
     def find_closest_stops(self,lat,lon):
         """
         Recursively work through the clustered file until a group of stops close to the user is found.
-        Should run in O(1) time as the nested clusters only go three or four deep.
+        Should run in basically O(1) time as the nested clusters only go three or four deep.
         Distance only has to be calculated to 30 cluster centers.
         """
         from math import inf 
@@ -169,7 +169,15 @@ class stop_finder():
             else:
                 clusters = best_group['clusters']
 
-
+    def rank_closest_stops(self,lat,lon):
+        from operator import itemgetter
+        cluster = self.find_closest_stops(lat,lon)
+        cluster = sorted(cluster,key=itemgetter('distance'))
+    
+    def best_stop(self,lat,lon):
+        cluster = rank_closest_stops(lat,lon)
+        return cluster[0]
+        
 
 #functions for retrieving and prepping data on a random stop
 

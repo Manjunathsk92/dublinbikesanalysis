@@ -3,6 +3,8 @@
 It works! It works! It kind of but not really works!
 
 """
+import sys
+stop = sys.argv[1]
 from sklearn.linear_model import LinearRegression as lr
 from sklearn.preprocessing import MinMaxScaler as mms
 from sklearn import metrics
@@ -15,7 +17,7 @@ with open('/data/chained_models.bin','rb') as handle:
 routes = json.loads(open('/home/student/dbanalysis/dbanalysis/resources/trimmed_routes.json','r').read())
 route = routes['15'][1][1:]
 begins = stop_tools.stop_data(str(route[0]),str(route[1]))
-ends = stop_tools.stop_data(str(route[-12]),str(route[-11]))
+ends = stop_tools.stop_data(str(route[int(stop)]),str(route[int(stop)+1]))
 ends['end'] = ends['actualtime_arr_to']
 merged = pd.merge(begins,ends[['tripid','dayofservice','routeid','end']], on=['tripid','dayofservice','routeid'])
 features = ['day','month','hour']
@@ -38,7 +40,7 @@ cur_stop = route[index]
 for model in models:
     index+=1
     cur_stop = route[index]
-    if cur_stop == route[-11]:
+    if cur_stop == route[int(stop)+1]:
         break
     traveltime = model.predict(df[features])
     print(traveltime.mean()) 
