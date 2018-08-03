@@ -19,13 +19,9 @@ for route in routes:
     for variation in range(0, len(routes[route])):
         count +=1
         print(route,variation)
-        try:
-            print(count,'/',total)
         
-            model = BRM.BRModel(str(route),variation,rgr='Neural',mode='build')
-            with open('/data/BRM/'+str(route)+'_'+str(variation)+'.bin','wb') as handle:
-                pickle.dump(model,handle,protocol=pickle.HIGHEST_PROTOCOL)
-        except:
-            pass
+        print(count,'/',total)
+        
+        call(['python','buildBRM.py',str(route),str(variation)])
     
            

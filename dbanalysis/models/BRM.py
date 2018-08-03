@@ -11,7 +11,7 @@ class BRModel():
     Planned time of arrival boosts score considerably
     """
     def __init__ (self, route,variation,verbose=True,src='build',rgr='RandomForest',\
-                mode='validate',features = ['distance','weekend','vappr','rain'],use_dummies=True):
+                mode='validate',features = ['distance','vappr'],use_dummies=True):
         
         import json
         self.regr_type = rgr
@@ -39,7 +39,7 @@ class BRModel():
                 self.rgr = lr(fit_intercept=True)
             elif rgr == 'Neural':
                 from sklearn.neural_network import MLPRegressor as mlpr
-                self.rgr = mlpr(hidden_layer_sizes=(100,100,))
+                self.rgr = mlpr(hidden_layer_sizes=(100,))
                 del(self.routes)
                 if mode == 'validate':
                     self.validate_neural_network()
@@ -52,7 +52,7 @@ class BRModel():
         msk = np.random.rand(len(self.data)) < 0.5
         self.train = self.data[msk]
         del(msk)
-        from sklearn.preprocessing import MinMaxScaler as mms
+        from sklearn.preprocessing import Normalizer as mms
         del(self.data)
         self.X_transformer = mms().fit(self.train[self.features])
         Y = self.train['traveltime'].values
@@ -71,14 +71,14 @@ class BRModel():
         
         self.train = self.data[self.data['year']==2016]
         self.test = self.data[self.data['year'] == 2017]
-        from sklearn.preprocessing import MinMaxScaler as mms
+        from sklearn.preprocessing import Normalizer as mms
         del(self.data)
         self.X_transformer = mms().fit(self.train[self.features])
         Y = self.train['traveltime'].values
-        Y=Y.reshape(-1,1)
-        self.Y_transformer = mms().fit(Y)
+        #Y=Y.reshape(-1,1)
+        #self.Y_transformer = mms().fit(Y)
         X = self.X_transformer.transform(self.train[self.features])
-        Y = self.Y_transformer.transform(Y)
+        #Y = self.Y_transformer.transform(Y)
         del(self.train)
         self.model = self.rgr.fit(X,Y)
         del(X)
@@ -94,9 +94,9 @@ class BRModel():
             Y = test['traveltime']
             number_samples.append(len(test))
             X = self.X_transformer.transform(test[self.features])
-            preds = self.model.predict(X)
-            real_preds = self.Y_transformer.inverse_transform(preds.reshape(-1,1))
-            real_preds = [i[0] for i in real_preds]
+            real_preds = self.model.predict(X)
+            #real_preds = self.Y_transformer.inverse_transform(preds.reshape(-1,1))
+            #real_preds = [i[0] for i in real_preds]
             r2_score = metrics.r2_score(Y, real_preds)
             MAE = metrics.mean_absolute_error(Y,real_preds)
             MAPE = ((abs(Y - real_preds)/Y)*100).mean()
@@ -104,8 +104,10 @@ class BRModel():
             mae.append(MAE)
             mape.append(MAPE)
             print(r2_score,MAE,MAPE)
-        distances = distances[:-1]
-                
+        self.distances = distances[:-1]
+        del(self.test)
+        del(test)
+        del(preds)        
     def build_model():
         import numpy as np
         if self.verbose:
@@ -140,7 +142,14 @@ class BRModel():
             
             data = stop_tools.get_stop_link(arr[i],arr[i+1])
             if data is not None:
+                
+            
+                routeids = data['routeid'].unique()
+                valid_routeids = [r for r in routeids if r.split('_')[0] == self.route]
+                data = data[data['routeid'].isin(valid_routeids)]
+
                 to_concat.append(data)
+            
             del(data)
         self.data = pd.concat(to_concat,axis=0)
         del to_concat
@@ -160,6 +169,7 @@ class BRModel():
             self.add_dummies()
             self.features += self.dummy_features
         self.data=self.data[self.data['traveltime']>0]
+        self.data['planned_traveltime'] = self.data['plannedtime_arr_from'] - self.data['base_time_dep']
     def select_routes(self):
         if self.verbose:
             print('parsing routeids')

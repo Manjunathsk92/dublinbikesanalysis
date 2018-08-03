@@ -1,12 +1,15 @@
 import pandas as pd
 import json 
 import pickle
+import pandas as pd
 class time_tabler():
 
     def __init__(self,make_schedule_keys=False):
         if make_schedule_keys:
             df = pd.read_csv('/home/student/data/gtfs/calendar.txt')
             self.schedule_keys = {}
+            from dbanalysis.stop_tools import stop_getter
+            self.s_getter = stop_getter()
             for s_id in df['service_id'].unique():
                 
                 gf = df[df['service_id']==s_id]
@@ -24,7 +27,69 @@ class time_tabler():
         output=[]
         for key in self.dep_times:
             output.append(key)
-        return output        
+        return output
+    
+    def add_distances(self,timetables):
+        output = []
+        import copy
+        for timetable in timetables:
+            to_concat = []
+            distances = []
+            total_distance = 0
+            for i in range(len(timetable['pattern']-1):
+                stopA = timetable['pattern'][i]
+                stopB = timetable['pattern'][i+1]
+                total_distance += self.s_getter.get_stop_distance(str(stopA),str(stopB))
+                distances.append(total_distance)
+            for distance in distances:
+                df = copy.deepcopy(timetable['matrix'])
+                df['distance'] = distance
+                to_concat.append(df)
+                del(df)
+            matrix = pd.concat(to_concat,axis=0)
+            del(to_concat)
+            output.append({'matrix':matrix,'pattern':timetable['pattern']}, 'variation':timetable['variation'])
+        return output
+
+
+            
+    def get_dep_times_five_days(self,route,dt):
+        day = dt.weekday()
+        month = dt.month
+      
+
+        variations = self.dep_times[route]
+        output = []
+        
+        for index, variation in enumerate(variations):
+            pattern = variation['pattern']
+            times=[]
+            busIDs=[]
+            days = []
+            temp_day = day
+            for i in range(0,5):
+                
+                for bus_number, pair in enumerate(variation['leave_times']):
+                    if self.runs_today(pair['schedule'],temp_day):
+                        ts = pair['lt'].split(':')
+                        total = int(ts[0])*3600 + int(ts[1]) * 60 + int(ts[2])
+                        times.append(total)
+                        busIDs.append(bus_number)
+                        days.append(temp_day)
+                temp_day += 1
+                if temp_day > 6:
+                    temp_day = 0
+            matrix = pd.DataFrame({'actualtime_arr_from':times,'day':days,'busID':busIDs})
+            matrix['month'] = month
+            matrix['weekend'] = matrix['day']>4
+            matrix['variation'] = index
+            
+     
+            if matrix.shape[0] > 0:
+                output.append({'pattern':pattern,'matrix':matrix,'variation':index})
+        return output
+          
+
     def get_dep_times(self,route,dt):
         """
         Generates departure times matrices, the inputs to chained route models.

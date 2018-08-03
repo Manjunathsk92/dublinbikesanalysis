@@ -64,8 +64,8 @@ class stop_getter():
         base_dir = '/home/student/dbanalysis/dbanalysis/resources/'
         with open(base_dir+'trimmed_stops_shapes_map.pickle','rb') as handle:
             self.stops_map = pickle.load(handle)
-
-        self.stops_dict = json.loads(open(base_dir+'stops_trimmed.json','r').read())
+        with open(base_dir+'new_stops_dict.bin','rb') as handle:
+            self.stops_dict = pickle.load(handle)
 
     def get_stop_coords(self,stop):
 
@@ -122,7 +122,22 @@ class stop_getter():
         else:
             return None
 
+    def get_shape_route(self,start_stop,end_stop,route_array):
+        begin = route_array.index(int(start_stop))
+        end = route_array.index(int(end_stop))
+        output=[]
+        distance = 0
+        for i in range(begin,end):
+            output += self.get_shape(str(route_array[i]),str(route_array[i+1]))
+        for i in range(0,len(output)-1:
+            distance += haversine.haversine((output[i]['lat'],output[i]['lon']),\
+                                        (output[i+1]['lat'],output[i+1]['lon']))    
+            
+        return {'shape':output,'distance':distance}
 
+    def routes_serving_stop(self,stop):
+        return {'routes':self.stops_dict[str(stop)]['serves']}
+    
 class stop_finder():
 
     """
@@ -299,3 +314,6 @@ def fake_data_frame(route,stop1,stop2,index):
 if __name__ == '__main__':
     b=stop_finder()
     print(b.find_closest_stops(53.3498,-6.2603))
+    s=stop_getter()
+    print(s.get_shape_route(6318,5190,[6318, 6319, 7246, 6320, 4594, 4595, 4596, 4563, 1218, 1270, 1272, 1273, 1274, 1275, 1276, 1277, 1219, 1220, 1221, 664, 665, 666, 667, 668, 614, 615, 616, 617, 618, 619, 675, 4415, 301, 4495, 5190]))
+              
