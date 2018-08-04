@@ -21,7 +21,7 @@ for route in routes:
         print(route,variation)
         
         print(count,'/',total)
-        
+        call(['mkdir','/data/BRM/'+str(route)+'_'+str(variation)])       
         call(['python','buildBRM.py',str(route),str(variation)])
     
            

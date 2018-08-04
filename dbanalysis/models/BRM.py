@@ -1,5 +1,6 @@
 from dbanalysis import stop_tools
 import pandas as pd
+import numpy as np
 class BRModel():
     """
     Big route model class
@@ -52,7 +53,8 @@ class BRModel():
         msk = np.random.rand(len(self.data)) < 0.5
         self.train = self.data[msk]
         del(msk)
-        from sklearn.preprocessing import Normalizer as mms
+        
+        from sklearn.preprocessing import MinMaxScaler as mms
         del(self.data)
         self.X_transformer = mms().fit(self.train[self.features])
         Y = self.train['traveltime'].values
@@ -60,9 +62,12 @@ class BRModel():
         self.Y_transformer = mms().fit(Y)
         X = self.X_transformer.transform(self.train[self.features])
         Y = self.Y_transformer.transform(Y)
-        del(self.train)
+        
         self.model = self.rgr.fit(X,Y)
         print('Built')
+        del(X)
+        del(Y)
+        del(self.train)
 
 
 
@@ -71,14 +76,14 @@ class BRModel():
         
         self.train = self.data[self.data['year']==2016]
         self.test = self.data[self.data['year'] == 2017]
-        from sklearn.preprocessing import Normalizer as mms
+        from sklearn.preprocessing import MinMaxScaler as mms
         del(self.data)
         self.X_transformer = mms().fit(self.train[self.features])
         Y = self.train['traveltime'].values
-        #Y=Y.reshape(-1,1)
-        #self.Y_transformer = mms().fit(Y)
+        Y=Y.reshape(-1,1)
+        self.Y_transformer = mms().fit(Y)
         X = self.X_transformer.transform(self.train[self.features])
-        #Y = self.Y_transformer.transform(Y)
+        Y = self.Y_transformer.transform(Y)
         del(self.train)
         self.model = self.rgr.fit(X,Y)
         del(X)
@@ -94,9 +99,11 @@ class BRModel():
             Y = test['traveltime']
             number_samples.append(len(test))
             X = self.X_transformer.transform(test[self.features])
-            real_preds = self.model.predict(X)
-            #real_preds = self.Y_transformer.inverse_transform(preds.reshape(-1,1))
-            #real_preds = [i[0] for i in real_preds]
+            preds = self.model.predict(X)
+            real_preds = self.Y_transformer.inverse_transform(preds.reshape(-1,1))
+            real_preds = np.array([i[0] for i in real_preds])
+            print(real_preds.mean())
+            input()
             r2_score = metrics.r2_score(Y, real_preds)
             MAE = metrics.mean_absolute_error(Y,real_preds)
             MAPE = ((abs(Y - real_preds)/Y)*100).mean()
@@ -261,7 +268,7 @@ class BRModel():
 if __name__=='__main__':
     import time
     t1 = time.time()
-    model = BRModel('104',0,rgr='Neural',mode='build')
+    model = BRModel('1',0,rgr='Neural',mode='validate')
     t2 = time.time() - t1
     print('completed in', t2//3600, 'hours', (t2%3600)//60, 'minutes')
     import pickle

@@ -66,7 +66,9 @@ class stop_getter():
             self.stops_map = pickle.load(handle)
         with open(base_dir+'new_stops_dict.bin','rb') as handle:
             self.stops_dict = pickle.load(handle)
-
+    def get_stop_info(self,stop):
+        stop = str(stop)
+        return self.stops_dict[stop]
     def get_stop_coords(self,stop):
 
         if stop in self.stops_dict:
@@ -129,7 +131,7 @@ class stop_getter():
         distance = 0
         for i in range(begin,end):
             output += self.get_shape(str(route_array[i]),str(route_array[i+1]))
-        for i in range(0,len(output)-1:
+        for i in range(0,len(output)-1):
             distance += haversine.haversine((output[i]['lat'],output[i]['lon']),\
                                         (output[i+1]['lat'],output[i+1]['lon']))    
             
