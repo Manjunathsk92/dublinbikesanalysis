@@ -44,7 +44,6 @@ class router():
         for stopA in arr[:-1]:
             d[str(stopA)] = df[df['stopA'] == str(stopA)]
             if first:
-                d[str(stopA)]['actualtime_arr_from'] = 0
                 first = False
             else:
                 d[str(stopA)]['actualtime_arr_from'] = arrs

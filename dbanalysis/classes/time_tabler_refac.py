@@ -2,6 +2,7 @@ import pandas as pd
 import json 
 import pickle
 import pandas as pd
+import numpy as np
 class time_tabler():
 
     def __init__(self,make_schedule_keys=False):
@@ -23,7 +24,7 @@ class time_tabler():
             with open('/home/student/dbanalysis/dbanalysis/resources/schedule_keys.pickle','rb') as handle:
                 self.schedule_keys = pickle.load(handle)
     
-        with open('/home/student/dbanalysis/dbanalysis/resources/clean_routes.pickle','rb') as handle:
+        with open('/home/student/dbanalysis/dbanalysis/resources/dep_times.pickle','rb') as handle:
             self.dep_times=pickle.load(handle)
     def get_all_routes(self):
         output=[]
@@ -75,7 +76,7 @@ class time_tabler():
       
 
         variations = self.dep_times[route]
-        output = []
+        output = {}
         
         for index, variation in enumerate(variations):
             pattern = variation['pattern']
@@ -99,12 +100,15 @@ class time_tabler():
             matrix['month'] = month
             matrix['weekend'] = matrix['day']>4
             matrix['variation'] = index
+            matrix['routeid'] = route
             matrix['hour'] = matrix['actualtime_arr_from'] // 3600
             
      
             if matrix.shape[0] > 0:
-                output.append({'pattern':pattern,'matrix':matrix,'variation':index})
-        return self.add_distances(output)
+                output[index] ={'pattern':pattern,'matrix':matrix,'variation':index}
+       
+       
+        return output
           
 
     def get_dep_times(self,route,dt):
@@ -138,7 +142,7 @@ class time_tabler():
             matrix['weekend'] = weekend
             matrix['variation'] = index
             matrix['busIDs'] = busIDs
-     
+            matrix['routeid'] = route 
             if matrix.shape[0] > 0:
                 output.append({'pattern':pattern,'matrix':matrix})
         return output
@@ -162,59 +166,69 @@ class stop_time_table():
     """
     def __init__(self):
         self.has_data = [False for i in range(7)]
-        self.to_concat = []
+        self.to_concat = {}
         self.data = {}
         for i in range(7):
             self.data[i] = {}
         
        
-    def add_times(self,df):
-        self.to_concat.append(df) 
+    def add_times(self,df,link):
+        
+            
+        if link not in self.to_concat:
+            self.to_concat[link] = []
+        self.to_concat[link].append(df) 
     def concat_and_sort(self):
         """
         Concat and sort data frames for each available day, and save them as raw numpy matrices.
         it is hoped that the raw numpy matrics will be faster to query
         """
-        df = pd.concat(to_concat,axis=0).sort_value(by=['actualtime_arr_from'])
-        del(to_concat)
-        for day in df['day'].unique():
-            temp = df[df['day']] == day
-            if temp['stopB'].nunique() > 1:
-                for stopB in temp['stopB'].unique():
-                    temp2=temp[temp['stopB']==stopB]
-                    self.data[day][stopB] = temp2[['actualtime_arr_from','actualtime_arr_to','routeid']].values
+        for link in self.to_concat:
+            
+            to_concat = self.to_concat[link]
+            df = pd.concat(to_concat,axis=0)
+            df=df.sort_values(by=['day','actualtime_arr_from'])
+            for d in df['day'].unique():
+                self.data[d][link] = df[df['day']==d][['actualtime_arr_from','actualtime_arr_to','routeid']].values
+            del(df)
+        del(self.to_concat)
 
              
 
-    def get_times_by_link(self,link):
-        """
-        Times that busses arrive for a particular link
-        """
-        return self.data[self.data['link']==link]
-    
-    def get_times_by_route(self,route):
-        """
-        Times busses arive for particular route
-        """
-        return self.data[self.data['route']==route]
-
-    def get_next_departure(self,link,day,current_time):
+    def get_next_departure(self,day,link,current_time):        
+        if link not in self.data[day]:
+            return None
+        import numpy as np
+        index=[np.searchsorted(self.data[day][link][0:,0],current_time)]
         
-        """
-        Returns the next time a bus will get to a specified link.
-        Essential to the route finding algorithm
-        """
+        if index[0] < self.data[day][link].shape[0]:
+            return self.data[day][link][index]
+        else:
+            return None
+    def get_next_route(self,day,link,route,current_time):
+        import numpy as np
+        index = self.data[day][link][np.searchsorted(self.data[day][link][0:,0],current_time)]
+        for row in self.data[day][link][index:]:
+            if row[2] == route:
+                return row
+        return None
+      
+    def get_next_departure_route(self,day,link,current_time,route):
+        index = self.data[day][link][np.searchsorted(self.data[day][link][0:,0],current_time)]
+        for i in self.data[day][link][index:]:
+            if i[2] == route:
+                return i         
+        return None
+    def get_time_table(self,day):
+        output = []
+        for link in self.data[day]:
+            df = self.data[link][day]
+            for row in df:
+                output.append({'actualtime_arr_from':row[0],'acutaltime_arr_to':row[1],\
+                            'routeid':row[2],'link':route})
+        from operator import itemgetter
+        return sorted(output, key=itemgetter('actualtime_arr_from')) 
         
-        return self.data[day][link][np.searchsorted(self.data[day][link],current_time)]  
-    
-    def get_all_times(self):
-        return self.data
-
-    def drop_day(self,day):
-        """
-        Drop a whole day's worth of data. Presumably for when time tables are recalculated.
-        """
-        self.data = self.data[self.data['day']!=day]
 
     def add_to_database(self, df):
         """

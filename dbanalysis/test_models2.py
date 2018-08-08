@@ -50,4 +50,5 @@ pred_traveltimes = df['actualtime_arr_from'] - merged['actualtime_arr_from']
 print('////')
 print(metrics.mean_absolute_error(real_traveltimes,pred_traveltimes))
 print(metrics.r2_score(real_traveltimes,pred_traveltimes))
+print(((abs(real_traveltimes - pred_traveltimes)/real_traveltimes)*100).mean())
 print('///')

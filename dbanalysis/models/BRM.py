@@ -44,10 +44,12 @@ class BRModel():
                 del(self.routes)
                 if mode == 'validate':
                     self.validate_neural_network()
-                else:
+                elif mode == 'build':
                     self.build_neural_network()
     
-    
+                elif mode == 'data':
+                    pass    
+
     def build_neural_network(self):
         import numpy as np
         msk = np.random.rand(len(self.data)) < 0.5

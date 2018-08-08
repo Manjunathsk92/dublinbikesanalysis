@@ -205,6 +205,8 @@ def random_stop_data():
     Weather data seems to include NaN values.
     """
     a,fromstop,tostop=random_stop_file()
+    if a is None:
+        return None
     weather = pd.read_csv('/home/student/dbanalysis/dbanalysis/resources/cleanweather.csv')
     weather['dt']=pd.to_datetime(weather['date'])
     weather['hour']=weather['dt'].dt.hour
@@ -221,16 +223,20 @@ def random_stop_file():
     for i in c:
         if i != 'orphans.csv':
             return '/home/student/data/stops/'+stop+'/'+i, stop, i.split('.')[0]
-    return None
+    return None,None,None
 
 def stop_data(fromstop,tostop):
+    import os
     weather = pd.read_csv('/home/student/dbanalysis/dbanalysis/resources/cleanweather.csv')
     weather['dt']=pd.to_datetime(weather['date'])
     weather['hour']=weather['dt'].dt.hour
     weather['date']=weather['dt'].dt.date
-    df=prep_test_stop('/data/stops/'+fromstop+'/'+tostop+'.csv',weather,fromstop,tostop)
-    del weather
-    return df
+    if os.path.exists('/data/stops/'+fromstop+'/'+tostop+'.csv'):
+        df=prep_test_stop('/data/stops/'+fromstop+'/'+tostop+'.csv',weather,fromstop,tostop)
+        del weather
+        return df
+    else:
+        return None
 
 def prep_test_stop(filename,weather,fromstop,tostop):
     from dbanalysis import headers as hds
@@ -238,8 +244,7 @@ def prep_test_stop(filename,weather,fromstop,tostop):
     df=pd.read_csv(filename,names=hds.get_stop_link_headers())
     df['fromstop']=fromstop
     df['tostop']=tostop
-    df['traveltime']=df['actualtime_arr_to']-df['actualtime_dep_from']
-    df['dwelltime']=df['actualtime_dep_from']-df['actualtime_arr_from']
+    df['traveltime']=df['actualtime_arr_to']-df['actualtime_arr_from']
     df['distance'] = s_getter.get_stop_distance(fromstop,tostop)
     df['speed'] = df['distance'] / (df['traveltime']/3600)
    
